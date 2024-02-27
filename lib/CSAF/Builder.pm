@@ -15,9 +15,9 @@ sub build {
 
     my ($self, $skip_validation) = @_;
 
-    my $document        = $self->csaf->document->TO_BUILD;
-    my $vulnerabilities = $self->csaf->vulnerabilities->TO_BUILD;
-    my $product_tree    = $self->csaf->product_tree->TO_BUILD;
+    my $document        = $self->csaf->document->TO_CSAF;
+    my $vulnerabilities = $self->csaf->vulnerabilities->TO_CSAF;
+    my $product_tree    = $self->csaf->product_tree->TO_CSAF;
 
     my $csaf = {document => $document};
 

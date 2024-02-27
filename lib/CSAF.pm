@@ -13,7 +13,7 @@ use CSAF::Document;
 
 use overload '""' => 'to_string';
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 our $CACHE = {};
 

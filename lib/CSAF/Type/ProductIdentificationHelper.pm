@@ -37,7 +37,7 @@ sub x_generic_uris {
     $self->{x_generic_uris} ||= CSAF::Type::GenericURIs->new(@_);
 }
 
-sub TO_BUILD {
+sub TO_CSAF {
 
     my $self = shift;
 
@@ -56,7 +56,7 @@ sub TO_BUILD {
     }
 
     if (@{$self->hashes->items}) {
-        $output->{hashes} = $self->hashes->TO_BUILD;
+        $output->{hashes} = $self->hashes->TO_CSAF;
     }
 
     return $output;
@@ -64,3 +64,80 @@ sub TO_BUILD {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+CSAF::Type::ProductIdentificationHelper
+
+=head1 SYNOPSIS
+
+    use CSAF::Type::ProductIdentificationHelper;
+    my $type = CSAF::Type::ProductIdentificationHelper->new( );
+
+
+=head1 DESCRIPTION
+
+
+
+=head2 METHODS
+
+L<CSAF::Type::ProductIdentificationHelper> inherits all methods from L<CSAF::Type::Base> and implements the following new ones.
+
+=over
+
+=item $type->cpe
+
+=item $type->hashes
+
+=item $type->model_numbers
+
+=item $type->purl
+
+=item $type->sbom_urls
+
+=item $type->serial_numbers
+
+=item $type->skus
+
+=item $type->x_generic_uris
+
+=back
+
+
+=head1 SUPPORT
+
+=head2 Bugs / Feature Requests
+
+Please report any bugs or feature requests through the issue tracker
+at L<https://github.com/giterlizzi/perl-CSAF/issues>.
+You will be notified automatically of any progress on your issue.
+
+=head2 Source Code
+
+This is open source software.  The code repository is available for
+public review and contribution under the terms of the license.
+
+L<https://github.com/giterlizzi/perl-CSAF>
+
+    git clone https://github.com/giterlizzi/perl-CSAF.git
+
+
+=head1 AUTHOR
+
+=over 4
+
+=item * Giuseppe Di Terlizzi <gdt@cpan.org>
+
+=back
+
+
+=head1 LICENSE AND COPYRIGHT
+
+This software is copyright (c) 2023-2024 by Giuseppe Di Terlizzi.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

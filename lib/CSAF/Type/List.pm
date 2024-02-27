@@ -7,30 +7,9 @@ use warnings;
 use Moo;
 use Carp;
 
-extends 'CSAF::Type::Base';
+extends 'CSAF::List';
 
-has item_class      => (is => 'ro', builder  => '_build_item_class', lazy => 1);
-has item_class_name => (is => 'ro', required => 1);
-has items           => (is => 'rw', default  => sub { [] });
-
-around BUILDARGS => sub {
-    my ($orig, $class, @args) = @_;
-
-    return {items => \@args} if @args > 0;    # TODO
-    return $class->$orig(@args);
-};
-
-sub _build_item_class {
-
-    my $class = shift->item_class_name;
-
-    return $class if ($class->can('new') or eval "require $class; 1");
-
-    Carp::croak "Failed to load item class $class: $@";
-
-}
-
-sub size { scalar @{shift->items} }
+has item_class => (is => 'ro', required => 1);
 
 sub each {
 
@@ -45,40 +24,101 @@ sub each {
 
 }
 
-sub to_array { [@{shift->items}] }
-
 sub item {
 
     my ($self, %params) = @_;
 
-    my $item = $self->item_class->new(%params);
+    my $item_class = $self->item_class;
+
+    if (! $item_class->can('new')) {
+        eval "require $item_class; 1";
+        Carp::croak "Failed to load item class '$item_class': $@" if ($@);
+    }
+
+    my $item = $item_class->new(%params);
     push @{$self->items}, $item;
 
     return $item;
 
 }
 
-sub append { shift->item(@_) }
-sub add    { shift->item(@_) }
+sub TO_JSON { shift->TO_CSAF }
 
-sub TO_BUILD {
+sub TO_CSAF {
 
     my $self   = shift;
     my $output = [];
 
     foreach my $item (@{$self->items}) {
-        if (ref($item) =~ /^CSAF::Type/) {
-            push @{$output}, $item->TO_BUILD;
-        }
-        else {
-            push @{$output}, $item;
-        }
+        push @{$output}, ((ref($item) =~ /^CSAF::Type/) ? $item->TO_CSAF : $item);
     }
 
     return $output;
 
 }
 
-sub TO_JSON { shift->TO_BUILD }
-
 1;
+
+__END__
+
+=head1 NAME
+
+CSAF::Type::List
+
+=head1 SYNOPSIS
+
+    use CSAF::Type::List;
+    my $type = CSAF::Type::List->new( item_class=> 'CSAF::Type::Vulnerability' );
+
+
+=head1 DESCRIPTION
+
+L<CSAF::Type::List> is a base collection class.
+
+
+=head2 METHODS
+
+L<CSAF::Type::List> inherits all methods from L<CSAF::List> and implements the following new ones.
+
+=over
+
+=item $type->item_class
+
+=back
+
+
+=head1 SUPPORT
+
+=head2 Bugs / Feature Requests
+
+Please report any bugs or feature requests through the issue tracker
+at L<https://github.com/giterlizzi/perl-CSAF/issues>.
+You will be notified automatically of any progress on your issue.
+
+=head2 Source Code
+
+This is open source software.  The code repository is available for
+public review and contribution under the terms of the license.
+
+L<https://github.com/giterlizzi/perl-CSAF>
+
+    git clone https://github.com/giterlizzi/perl-CSAF.git
+
+
+=head1 AUTHOR
+
+=over 4
+
+=item * Giuseppe Di Terlizzi <gdt@cpan.org>
+
+=back
+
+
+=head1 LICENSE AND COPYRIGHT
+
+This software is copyright (c) 2023-2024 by Giuseppe Di Terlizzi.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

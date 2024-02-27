@@ -902,7 +902,7 @@ sub TEST_6_1_27_4 {
     my $self = shift;
 
     my $document_category = $self->csaf->document->category;
-    my $product_tree      = $self->csaf->product_tree->TO_BUILD;    # TODO !?
+    my $product_tree      = $self->csaf->product_tree->TO_CSAF;    # TODO !?
 
     if ($document_category =~ /(csaf_security_advisory|csaf_vex)/ && !$product_tree) {
 
@@ -952,7 +952,7 @@ sub TEST_6_1_27_6 {
 
             my ($vulnerability, $idx) = @_;
 
-            if (!$vulnerability->product_status->TO_BUILD) {
+            if (!$vulnerability->product_status->TO_CSAF) {
                 $self->add_message(CSAF::Validator::Message->new(
                     context => 'Mandatory Test',
                     path    => "/vulnerabilities/$idx",
