@@ -149,3 +149,85 @@ sub branches_walk {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+CSAF::Parser - Parse a CSAF document
+
+=head1 SYNOPSIS
+
+    use CSAF::Parser;
+
+    my $parser = eval { CSAF::Parser->new(file => 'csaf-2023-01.json') };
+
+    Carp::croak "Failed to parse CSAF document" if ($@);
+
+    my $csaf = $parser->parse;
+
+    $csaf->document->title('CSAF Document');
+
+    $csaf->to_string;
+
+
+=head1 DESCRIPTION
+
+Simple CSAF parser.
+
+=head2 ATTRIBUTES
+
+=over
+
+=item file
+
+CSAF file.
+
+=back
+
+=head2 METHODS
+
+=over
+
+=item parse
+
+Parse the provided CSAF document and return L<CSAF>.
+
+=back
+
+
+=head1 SUPPORT
+
+=head2 Bugs / Feature Requests
+
+Please report any bugs or feature requests through the issue tracker
+at L<https://github.com/giterlizzi/perl-CSAF/issues>.
+You will be notified automatically of any progress on your issue.
+
+=head2 Source Code
+
+This is open source software.  The code repository is available for
+public review and contribution under the terms of the license.
+
+L<https://github.com/giterlizzi/perl-CSAF>
+
+    git clone https://github.com/giterlizzi/perl-CSAF.git
+
+
+=head1 AUTHOR
+
+=over 4
+
+=item * Giuseppe Di Terlizzi <gdt@cpan.org>
+
+=back
+
+
+=head1 LICENSE AND COPYRIGHT
+
+This software is copyright (c) 2023-2024 by Giuseppe Di Terlizzi.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

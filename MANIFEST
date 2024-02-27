@@ -110,6 +110,13 @@ t/10-optional-6.2.14.t
 t/10-optional-6.2.2.t
 t/10-optional-6.2.3.t
 t/10-optional-6.2.4.t
+t/20-parser.t
+t/examples/bsi-2022-0001.json
+t/examples/cisco-sa-20180328-smi2.json
+t/examples/rhsa-2019_1862.json
+t/examples/rhsa-2021_5186.json
+t/examples/rhsa-2021_5217.json
+t/examples/rhsa-2022_0011.json
 t/lib/Test/CSAF.pm
 t/manifest.t
 t/pod-coverage.t
