@@ -18,9 +18,9 @@ has version => (
     isa     => sub { Carp::croak "CVSS3 version must be 3.0 or 3.1" unless ($_[0] eq '3.0' || $_[0] eq '3.1') }
 );
 
-has vectorString => (is => 'rw', required => 1, coerce => sub { uc $_[0] });
-has baseScore    => (is => 'rw', required => 1, coerce => sub { ($_[0] + 0) });
-has baseSeverity => (is => 'rw', required => 1, coerce => sub { uc $_[0] });
+has vectorString => (is => 'rw', coerce => sub { uc $_[0] });
+has baseScore    => (is => 'rw', coerce => sub { ($_[0] + 0) });
+has baseSeverity => (is => 'rw', coerce => sub { uc $_[0] });
 
 has [qw(
     attackVector

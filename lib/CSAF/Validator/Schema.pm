@@ -24,10 +24,10 @@ sub validate {
 
     foreach my $error (@errors) {
         $self->add_message(CSAF::Validator::Message->new(
-            context => 'JSON Schema',
-            message => $error->message,
-            path    => $error->path,
-            code    => '9.1.14'
+            category => 'schema',
+            message  => $error->message,
+            path     => $error->path,
+            code     => '9.1.14'
         ));
     }
 

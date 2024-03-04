@@ -72,11 +72,11 @@ sub TEST_6_2_2 {
                 foreach my $remediation ($vulnerability->remediations->each) {
                     if (!first { $product_id eq $_ } @{$remediation->product_ids}) {
                         $self->add_message(CSAF::Validator::Message->new(
-                            type    => 'warning',
-                            context => 'Mandatory Test',
-                            path    => "/vulnerabilities/$vulnerability_idx/product_status/$status/$product_idx",
-                            code    => '6.2.2',
-                            message => 'Missing Remediation'
+                            type     => 'warning',
+                            category => 'optional',
+                            path     => "/vulnerabilities/$vulnerability_idx/product_status/$status/$product_idx",
+                            code     => '6.2.2',
+                            message  => 'Missing Remediation'
                         ));
                     }
                 }
@@ -112,11 +112,11 @@ sub TEST_6_2_3 {
                 foreach my $score ($vulnerability->scores->each) {
                     if (!first { $product_id eq $_ } @{$score->products}) {
                         $self->add_message(CSAF::Validator::Message->new(
-                            type    => 'warning',
-                            context => 'Mandatory Test',
-                            path    => "/vulnerabilities/$vulnerability_idx/product_status/$status/$product_idx",
-                            code    => '6.2.3',
-                            message => 'Missing Score'
+                            type     => 'warning',
+                            category => 'optional',
+                            path     => "/vulnerabilities/$vulnerability_idx/product_status/$status/$product_idx",
+                            code     => '6.2.3',
+                            message  => 'Missing Score'
                         ));
                     }
                 }
@@ -141,11 +141,11 @@ sub TEST_6_2_4 {
 
         if ($revision->number =~ /\+/) {
             $self->add_message(CSAF::Validator::Message->new(
-                type    => 'warning',
-                context => 'Mandatory Test',
-                path    => "/document/tracking/revision_history/$idx/number",
-                code    => '6.2.4',
-                message => 'Build Metadata in Revision History'
+                type     => 'warning',
+                category => 'optional',
+                path     => "/document/tracking/revision_history/$idx/number",
+                code     => '6.2.4',
+                message  => 'Build Metadata in Revision History'
             ));
         }
 
@@ -162,11 +162,12 @@ sub TEST_6_2_14 {
         if ($lang =~ /(q([a-t])([a-z]))/gi) {
 
             $self->add_message(CSAF::Validator::Message->new(
-                type    => 'warning',
-                context => 'Optional Test',
-                path    => '/document/lang',
-                code    => '6.2.14',
-                message => 'Use of Private Language'
+                type     => 'warning',
+                category => 'optional',
+                context  => 'Optional Test',
+                path     => '/document/lang',
+                code     => '6.2.14',
+                message  => 'Use of Private Language'
             ));
 
         }
@@ -178,11 +179,12 @@ sub TEST_6_2_14 {
         if ($lang =~ /(q([a-t])([a-z]))/gi) {
 
             $self->add_message(CSAF::Validator::Message->new(
-                type    => 'warning',
-                context => 'Optional Test',
-                path    => '/document/source_lang',
-                code    => '6.2.14',
-                message => 'Use of Private Language'
+                type     => 'warning',
+                category => 'optional',
+                context  => 'Optional Test',
+                path     => '/document/source_lang',
+                code     => '6.2.14',
+                message  => 'Use of Private Language'
             ));
 
         }

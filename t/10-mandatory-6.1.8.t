@@ -35,33 +35,13 @@ $csaf->product_tree->full_product_names->add(name => 'Product A', product_id => 
 my $vulns = $csaf->vulnerabilities;
 my $vuln  = $vulns->add(cve => 'CVE-2023-00000');
 
-{
+# Check CVSS (2.0 and 3.x) JSON Schema
 
-    # Check required attribute
+$vuln->scores->add(
+    products => ['CSAFPID-9080700'],
+    cvss_v2  => {baseScore => 6.5, vectorString => 'CVSS:3.1/AV:L/AC:L/PR:H/UI:R/S:U/C:H/I:H/A:H'}
+);
 
-    eval {
-        $vuln->scores->add(
-            products => ['CSAFPID-9080700'],
-            cvss_v3  => {baseScore => 6.5, vectorString => 'CVSS:3.1/AV:L/AC:L/PR:H/UI:R/S:U/C:H/I:H/A:H'}
-        );
-    };
-
-    diag($@);
-    like($@, qr/baseSeverity/, 'Missing "baseSeverity" - Detect "Moo" coercion');
-
-}
-
-{
-
-    # Check CVSS (2.0 and 3.x) JSON Schema
-
-    $vuln->scores->add(
-        products => ['CSAFPID-9080700'],
-        cvss_v2  => {baseScore => 6.5, vectorString => 'CVSS:3.1/AV:L/AC:L/PR:H/UI:R/S:U/C:H/I:H/A:H'}
-    );
-
-    exec_validator_mandatory_test($csaf, '6.1.9');
-
-}
+exec_validator_mandatory_test($csaf, '6.1.8');
 
 done_testing;

@@ -19,7 +19,7 @@ sub TO_CSAF {
 
     my $self = shift;
 
-    my $output = {status => $self->status, party => $self->number};
+    my $output = {status => $self->status, party => $self->party};
 
     $output->{date}    = $self->date    if ($self->date);
     $output->{summary} = $self->summary if ($self->summary);

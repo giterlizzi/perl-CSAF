@@ -25,11 +25,19 @@ has purl => (
     isa       => sub { Carp::croak 'Invalid purl' if $_[0] !~ /$PURL_REGEX/ }
 );
 
+has hashes => (is => 'rw', trigger => 1, default => sub { CSAF::Type::Hashes->new });
+
 has [qw(sbom_urls serial_numbers skus model_numbers)] => (is => 'rw', predicate => 1, default => sub { [] });
 
-sub hashes {
-    my $self = shift;
-    $self->{hashes} ||= CSAF::Type::Hashes->new(@_);
+sub _trigger_hashes {
+
+    my ($self) = @_;
+
+    my $hashes = CSAF::Type::Hashes->new;
+    $hashes->item(%{$_}) for (@{$self->hashes});
+
+    $self->{hashes} = $hashes;
+
 }
 
 sub x_generic_uris {
@@ -55,8 +63,8 @@ sub TO_CSAF {
         $output->{x_generic_uris} = $self->x_generic_uris;
     }
 
-    if (@{$self->hashes->items}) {
-        $output->{hashes} = $self->hashes->TO_CSAF;
+    if (my $hashes = $self->{hashes}) {
+        $output->{hashes} = $hashes->TO_CSAF;
     }
 
     return $output;

@@ -9,21 +9,20 @@ use CSAF::Type::ProductIdentificationHelper;
 use Moo;
 extends 'CSAF::Type::Base';
 
-has name => (is => 'rw', required => 1);
-has product_id => (is => 'rw', required => 1, trigger => 1);
+has name                          => (is => 'rw', required => 1);
+has product_id                    => (is => 'rw', required => 1, trigger => 1);
+has product_identification_helper => (is => 'rw', trigger  => 1);
 
 sub _trigger_product_id {
     my ($self) = @_;
     $CSAF::CACHE->{products}->{$self->product_id} = $self->name;
 }
 
-has product_identification_helper => (
-    is        => 'rw',
-    predicate => 1,
-    coerce    => sub {
-        (ref($_[0]) !~ /ProductIdentificationHelper/) ? CSAF::Type::ProductIdentificationHelper->new(shift) : $_[0];
-    }
-);
+sub _trigger_product_identification_helper {
+    my ($self) = @_;
+    $self->{product_identification_helper}
+        = CSAF::Type::ProductIdentificationHelper->new($self->product_identification_helper);
+}
 
 sub TO_CSAF {
 
@@ -31,8 +30,9 @@ sub TO_CSAF {
 
     my $output = {name => $self->name, product_id => $self->product_id};
 
-    $output->{product_identification_helper} = $self->product_identification_helper->TO_CSAF
-        if ($self->has_product_identification_helper);
+    if (my $product_identification_helper = $self->{product_identification_helper}) {
+        $output->{product_identification_helper} = $product_identification_helper;
+    }
 
     return $output;
 

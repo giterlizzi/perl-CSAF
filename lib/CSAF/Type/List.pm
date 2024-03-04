@@ -30,15 +30,15 @@ sub item {
 
     my $item_class = $self->item_class;
 
-    if (!$item_class->can('new')) {
-        eval "require $item_class; 1";
-        Carp::croak "Failed to load item class '$item_class': $@" if ($@);
+    if ($item_class->can('new') or eval "require $item_class; 1") {
+
+        my $item = $item_class->new(%params);
+        push @{$self->items}, $item;
+
+        return $item;
     }
 
-    my $item = $item_class->new(%params);
-    push @{$self->items}, $item;
-
-    return $item;
+    Carp::croak "Failed to load item class '$item_class': $@" if ($@);
 
 }
 

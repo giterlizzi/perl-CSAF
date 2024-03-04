@@ -8,6 +8,7 @@ use Cpanel::JSON::XS;
 use Time::Piece;
 use File::Basename        qw(dirname);
 use File::Spec::Functions qw(catfile);
+use List::Util            qw(first);
 
 use Exporter 'import';
 
@@ -15,7 +16,8 @@ our @EXPORT_OK = (qw(
     schema_cache_path resources_path tt_templates_path
     check_datetime tracking_id_to_well_filename
     get_weakness_name collect_product_ids check_purl
-    file_read JSON
+    file_read decode_cvss3_vector_string JSON
+    product_in_group_exists
 ));
 
 my $PURL_REGEXP = qr{^pkg:[A-Za-z\\.\\-\\+][A-Za-z0-9\\.\\-\\+]*/.+};
@@ -48,22 +50,11 @@ sub get_weakness_name {
 
 }
 
-sub Time::Piece::TO_JSON {
-    shift->datetime;
-}
+sub Time::Piece::TO_JSON { shift->datetime }
 
-
-sub schema_cache_path {
-    return catfile(resources_path(), 'cache');
-}
-
-sub tt_templates_path {
-    return catfile(resources_path(), 'template');
-}
-
-sub resources_path {
-    return catfile(dirname(__FILE__), 'resources');
-}
+sub schema_cache_path { catfile(resources_path(),  'cache') }
+sub tt_templates_path { catfile(resources_path(),  'template') }
+sub resources_path    { catfile(dirname(__FILE__), 'resources') }
 
 sub check_datetime {
 
@@ -119,6 +110,29 @@ sub collect_product_ids {
 
 }
 
+sub product_in_group_exists {
+
+    my ($csaf, $product_id, $group_id) = @_;
+
+    my $exists = 0;
+
+    $csaf->product_tree->product_groups->each(sub {
+
+        my ($group) = @_;
+
+        if ($group->group_id eq $group_id) {
+            if (first { $product_id eq $_ } @{$group->product_ids}) {
+                $exists = 1;
+                return;
+            }
+        }
+
+    });
+
+    return $exists;
+
+}
+
 
 sub file_read {
 
@@ -131,6 +145,57 @@ sub file_read {
     };
 
     return $content;
+
+}
+
+sub decode_cvss3_vector_string {
+
+    my $vector_string = shift;
+
+    my $CVSS3_METRIC_VAUUES = {
+        AV => {N => 'NETWORK',     A => 'ADJACENT_NETWORK', L => 'LOCAL', P => 'PHYSICAL'},
+        AC => {L => 'LOW',         H => 'HIGH'},
+        PR => {N => 'NONE',        L => 'LOW', H => 'HIGH'},
+        UI => {N => 'NONE',        R => 'REQUIRED'},
+        S  => {U => 'UNCHANGED',   C => 'CHANGED'},
+        C  => {N => 'NONE',        L => 'LOW',          H => 'HIGH'},
+        I  => {N => 'NONE',        L => 'LOW',          H => 'HIGH'},
+        A  => {N => 'NONE',        L => 'LOW',          H => 'HIGH'},
+        E  => {X => 'NOT_DEFINED', U => 'UNPROVEN',     P => 'PROOF_OF_CONCEPT', F => 'FUNCTIONAL', H => 'HIGH'},
+        RL => {X => 'NOT_DEFINED', O => 'OFFICIAL_FIX', T => 'TEMPORARY_FIX',    W => 'WORKAROUND', U => 'UNAVAILABLE'},
+        RC => {X => 'NOT_DEFINED', U => 'UNKNOWN',      R => 'REASONABLE',       C => 'CONFIRMED'}
+    };
+
+    my $CVSS3_METRIC_LABEL = {
+        A  => 'availabilityImpact',
+        AC => 'attackComplexity',
+        AV => 'attackVector',
+        C  => 'confidentialityImpact',
+        E  => 'exploitCodeMaturity',
+        I  => 'integrityImpact',
+        PR => 'privilegesRequired',
+        RC => 'reportConfidence',
+        RL => 'remediationLevel',
+        S  => 'scope',
+        UI => 'userInteraction',
+    };
+
+    if ($vector_string =~ /^CVSS:3[.][0-1]\/(.*)/) {
+
+        my %cvss = split /[:\/]/, $1;
+
+        my $decoded = {};
+
+        foreach my $metric (keys %cvss) {
+
+            my $value = $cvss{$metric};
+            my $label = $CVSS3_METRIC_LABEL->{$metric};
+
+            $decoded->{$label} = $CVSS3_METRIC_VAUUES->{$metric}->{$value} || $value;
+        }
+
+        return $decoded;
+    }
 
 }
 

@@ -8,9 +8,9 @@ use Moo;
 
 extends 'CSAF::Type::Base';
 
-has version      => (is => 'ro', default  => '2.0');
-has vectorString => (is => 'ro', required => 1);
-has baseScore    => (is => 'ro', required => 1, coerce => sub { ($_[0] + 0) });
+has version      => (is => 'ro', default => '2.0');
+has vectorString => (is => 'ro');
+has baseScore    => (is => 'ro', coerce => sub { ($_[0] + 0) });
 
 has [qw(
     accessVector

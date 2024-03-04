@@ -8,9 +8,15 @@ use Moo;
 extends 'CSAF::Type::Base';
 
 
-has group_id    => (is => 'rw', required => 1, default => sub { [] });
+has group_id    => (is => 'rw', required => 1, trigger => 1);
 has product_ids => (is => 'rw', required => 1, default => sub { [] });
 has summary     => (is => 'rw');
+
+sub _trigger_group_id {
+    my ($self) = @_;
+
+    $CSAF::CACHE->{groups}->{$self->group_id} = $self->product_ids;
+}
 
 sub TO_CSAF {
 

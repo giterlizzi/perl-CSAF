@@ -6,6 +6,8 @@ use warnings;
 
 use Moo;
 
+use overload '@{}' => \&to_array, fallback => 1;
+
 has items => (is => 'rw', default => sub { [] });
 
 around BUILDARGS => sub {
@@ -30,6 +32,22 @@ sub each {
 
 }
 
+sub grep {
+    my ($self, $callback) = @_;
+    return $self->new(grep { $_->$callback(@_) } @{$self->items});
+}
+
+sub map {
+    my ($self, $callback) = @_;
+    return $self->new(map { $_->$callback(@_) } @{$self->items});
+}
+
+sub tap {
+    my ($self, $callback) = @_;
+    $_->$callback(@_) for (@{$self->items});
+    return $self;
+}
+
 sub to_array { [@{shift->items}] }
 
 sub item { push @{shift->items}, shift }
@@ -37,7 +55,7 @@ sub add  { shift->item(@_) }
 
 sub first { shift->items->[0] }
 sub last  { shift->items->[-1] }
-sub join  { join($_[1], $_[0]->items) }
+sub join  { join($_[1] // '', @{$_[0]->items}) }
 
 sub TO_JSON { [@{shift->items}] }
 
@@ -82,9 +100,20 @@ Evaluate callback for each element in collection.
 
     my $collection = $c->each(sub {...});
 
+    $c->each(sub {
+        my ($value, $idx) = @_;
+        [...]
+    });
+
 =item first
 
 Get the first element of collection.
+
+=item grep
+
+Filter items.
+
+    my $filtered = $c->grep(sub { $_ eq 'foo' });
 
 =item item
 
@@ -106,6 +135,12 @@ Join elements in collection.
 =item last
 
 Get the last element of collection.
+
+=item map
+
+Evalutate the callback and create a new collection.
+
+    CSAF::List->new(1,2,3)->map(sub { $_ * 2 });
 
 =item new
 

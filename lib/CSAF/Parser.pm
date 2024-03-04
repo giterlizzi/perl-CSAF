@@ -31,7 +31,8 @@ sub parse {
         $csaf->document->title($document->{title});
         $csaf->document->category($document->{category});
         $csaf->document->csaf_version($document->{csaf_version});
-        $csaf->document->lang($document->{lang}) if ($document->{lang});
+        $csaf->document->lang($document->{lang})               if ($document->{lang});
+        $csaf->document->source_lang($document->{source_lang}) if ($document->{source_lang});
 
         if (my $aggregate_severity = $document->{aggregate_severity}) {
             $csaf->document->aggregate_severity(%{$aggregate_severity});
@@ -112,6 +113,10 @@ sub parse {
                 $vuln->involvements->item(%{$_}) for (@{$involvements});
             }
 
+            if (my $flags = $vulnerability->{flags}) {
+                $vuln->flags->item(%{$_}) for (@{$flags});
+            }
+
         }
     }
 
@@ -127,6 +132,15 @@ sub parse {
         if (my $relationships = $product_tree->{relationships}) {
             $csaf_product_tree->relationships->item(%{$_}) for (@{$relationships});
         }
+
+        if (my $product_groups = $product_tree->{product_groups}) {
+            $csaf_product_tree->product_groups->item(%{$_}) for (@{$product_groups});
+        }
+
+        if (my $full_product_names = $product_tree->{full_product_names}) {
+            $csaf_product_tree->full_product_names->item(%{$_}) for (@{$full_product_names});
+        }
+
     }
 
     return $csaf;

@@ -10,14 +10,18 @@ extends 'CSAF::Type::Base';
 use CSAF::Type::FileHashes;
 
 has filename => (is => 'rw', required => 1);
+has file_hashes => (is => 'rw', required => 1, trigger => 1);
 
-has file_hashes => (
-    is       => 'rw',
-    required => 1,
-    coerce   => sub {
-        (ref($_[0]) !~ /FileHashes/) ? CSAF::Type::FileHashes->new(shift) : $_[0];
-    }
-);
+sub _trigger_file_hashes {
+
+    my ($self) = @_;
+
+    my $file_hashes = CSAF::Type::FileHashes->new;
+    $file_hashes->item(%{$_}) for (@{$self->file_hashes});
+
+    $self->{file_hashes} = $file_hashes;
+
+}
 
 sub TO_CSAF {
 
