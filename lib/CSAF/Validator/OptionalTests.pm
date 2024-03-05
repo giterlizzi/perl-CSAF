@@ -30,16 +30,11 @@ sub validate {
 
         if (DEBUG) {
 
-            state $last_tot_msgs = 0;
+            my $test_messages = scalar @{$self->summary->{$test_id} || []};
 
-            my $tot_msgs      = @{$self->messages};
-            my $test_tot_msgs = $tot_msgs - $last_tot_msgs;
-
-            if ($test_tot_msgs > 0) {
-                say STDERR sprintf('(W) Optional Test %s --> found %s validation warning(s)', $test_id, $test_tot_msgs);
+            if ($test_messages > 0) {
+                say STDERR sprintf('(W) Optional Test %s --> found %s validation warning(s)', $test_id, $test_messages);
             }
-
-            $last_tot_msgs = $tot_msgs;
 
         }
 
@@ -59,7 +54,7 @@ sub TEST_6_2_2 {
 
     $self->csaf->vulnerabilities->each(sub {
 
-        my ($vulnerability, $vulnerability_idx) = @_;
+        my ($vulnerability, $vuln_idx) = @_;
 
         my $product_status = $vulnerability->product_status;
 
@@ -74,7 +69,7 @@ sub TEST_6_2_2 {
                         $self->add_message(CSAF::Validator::Message->new(
                             type     => 'warning',
                             category => 'optional',
-                            path     => "/vulnerabilities/$vulnerability_idx/product_status/$status/$product_idx",
+                            path     => "/vulnerabilities/$vuln_idx/product_status/$status/$product_idx",
                             code     => '6.2.2',
                             message  => 'Missing Remediation'
                         ));
@@ -99,7 +94,7 @@ sub TEST_6_2_3 {
 
     $self->csaf->vulnerabilities->each(sub {
 
-        my ($vulnerability, $vulnerability_idx) = @_;
+        my ($vulnerability, $vuln_idx) = @_;
 
         my $product_status = $vulnerability->product_status;
 
@@ -114,7 +109,7 @@ sub TEST_6_2_3 {
                         $self->add_message(CSAF::Validator::Message->new(
                             type     => 'warning',
                             category => 'optional',
-                            path     => "/vulnerabilities/$vulnerability_idx/product_status/$status/$product_idx",
+                            path     => "/vulnerabilities/$vuln_idx/product_status/$status/$product_idx",
                             code     => '6.2.3',
                             message  => 'Missing Score'
                         ));

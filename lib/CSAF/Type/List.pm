@@ -7,7 +7,7 @@ use warnings;
 use Moo;
 use Carp;
 
-extends 'CSAF::List';
+extends 'CSAF::Util::List';
 
 has item_class => (is => 'ro', required => 1);
 
@@ -78,7 +78,7 @@ L<CSAF::Type::List> is a base collection class.
 
 =head2 METHODS
 
-L<CSAF::Type::List> inherits all methods from L<CSAF::List> and implements the following new ones.
+L<CSAF::Type::List> inherits all methods from L<CSAF::Util::List> and implements the following new ones.
 
 =over
 

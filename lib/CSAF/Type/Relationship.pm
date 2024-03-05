@@ -14,9 +14,8 @@ has product_reference            => (is => 'rw', required => 1);
 has relates_to_product_reference => (is => 'rw', required => 1);
 
 has full_product_name => (
-    is        => 'rw',
-    predicate => 1,
-    coerce    => sub {
+    is     => 'rw',
+    coerce => sub {
         (ref($_[0]) !~ /FullProductName/) ? CSAF::Type::FullProductName->new(shift) : $_[0];
     }
 );

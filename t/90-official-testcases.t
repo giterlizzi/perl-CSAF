@@ -36,10 +36,11 @@ foreach my $testcase (@{$testcases->{tests}}) {
 
         diag("[$testcase_id - $testcase_group] Test file: $test_name [valid => $is_valid]");
 
-        my $parser = CSAF::Parser->new(file => "$RealBin/official-testcases/$test_name");
-        my $csaf   = $parser->parse;
+        my $parser    = CSAF::Parser->new(file => "$RealBin/official-testcases/$test_name");
+        my $csaf      = $parser->parse;
+        my $doc_title = $csaf->document->title;
 
-        diag("[$testcase_id - $testcase_group] " . $csaf->document->title);
+        diag("[$testcase_id - $testcase_group] $doc_title");
 
         my @messages = $csaf->validate;
 
@@ -56,10 +57,10 @@ foreach my $testcase (@{$testcases->{tests}}) {
         }
 
         if ($is_valid) {
-            is($n_errors, 0, "$n_errors validation error(s) detected");
+            is($n_errors, 0, "$n_errors validation error(s) detected for '$doc_title'");
         }
         else {
-            isnt($n_errors, 0, "$n_errors validation error(s) detected");
+            isnt($n_errors, 0, "$n_errors validation error(s) detected for '$doc_title'");
         }
 
     }

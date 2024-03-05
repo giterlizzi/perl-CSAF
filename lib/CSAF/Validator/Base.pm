@@ -9,13 +9,11 @@ use List::Util qw(first);
 use Moo;
 extends 'CSAF::Base';
 
-use constant DEBUG => $ENV{CSAF_DEBUG};
-
 our %TESTS = ();
 
-has messages => (is => 'rw', default => sub { [] });
-
-has tests => (is => 'rw', default => sub { [] });
+has messages => (is => 'ro', default => sub { [] });
+has summary  => (is => 'ro', default => sub { {} });
+has tests    => (is => 'rw', default => sub { [] });
 
 sub validate { Carp::croak 'Method "validate" not implemented by subclass' }
 
@@ -32,7 +30,10 @@ sub add_message {
     my ($self, $message) = @_;
 
     $self->{messages} ||= [];
-    push @{$self->{messages}}, $message;
+    $self->{summary}->{$message->code} ||= [];
+
+    push @{$self->{messages}},                  $message;
+    push @{$self->{summary}->{$message->code}}, $message;
 
 }
 
@@ -44,12 +45,8 @@ sub exec_test {
     $test_sub =~ tr/\./_/;
 
     if (my $code_ref = $self->can($test_sub)) {
-
-        DEBUG and say STDERR sprintf '(I) %s - Execute test %s', ref($self), $test_id;
-
         eval { $code_ref->($self) };
         Carp::croak "Failed to execute test $test_id: $@" if ($@);
-
     }
 
 }

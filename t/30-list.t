@@ -6,9 +6,9 @@ use warnings;
 use Test::More;
 use CSAF::Util qw(JSON);
 
-use CSAF::List;
+use CSAF::Util::List;
 
-my $collection = CSAF::List->new(1, 2);
+my $collection = CSAF::Util::List->new(1, 2);
 
 subtest 'size' => sub {
     is($collection->size, 2, 'Test size #1');

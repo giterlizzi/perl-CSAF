@@ -4,7 +4,6 @@ lib/CSAF.pm
 lib/CSAF/Base.pm
 lib/CSAF/Builder.pm
 lib/CSAF/Document.pm
-lib/CSAF/List.pm
 lib/CSAF/Parser.pm
 lib/CSAF/Renderer.pm
 lib/CSAF/Renderer/Base.pm
@@ -70,6 +69,7 @@ lib/CSAF/Type/Tracking.pm
 lib/CSAF/Type/Vulnerabilities.pm
 lib/CSAF/Type/Vulnerability.pm
 lib/CSAF/Util.pm
+lib/CSAF/Util/List.pm
 lib/CSAF/Validator.pm
 lib/CSAF/Validator/Base.pm
 lib/CSAF/Validator/MandatoryTests.pm

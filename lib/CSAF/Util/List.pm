@@ -1,4 +1,4 @@
-package CSAF::List;
+package CSAF::Util::List;
 
 use 5.010001;
 use strict;
@@ -65,17 +65,17 @@ __END__
 
 =head1 NAME
 
-CSAF::List - Collection utility
+CSAF::Util::List - Collection utility
 
 =head1 SYNOPSIS
 
-    use CSAF::List;
-    my $collection = CSAF::List->new( qw[foo bar baz] );
+    use CSAF::Util::List;
+    my $collection = CSAF::Util::List->new( qw[foo bar baz] );
 
 
 =head1 DESCRIPTION
 
-L<CSAF::List> is a collection utility.
+L<CSAF::Util::List> is a collection utility.
 
 
 =head2 METHODS
@@ -140,13 +140,13 @@ Get the last element of collection.
 
 Evalutate the callback and create a new collection.
 
-    CSAF::List->new(1,2,3)->map(sub { $_ * 2 });
+    CSAF::Util::List->new(1,2,3)->map(sub { $_ * 2 });
 
 =item new
 
 Create a new collection.
 
-    my $c = CSAF::List->new( [foo bar baz] );
+    my $c = CSAF::Util::List->new( [foo bar baz] );
 
 =item size
 
