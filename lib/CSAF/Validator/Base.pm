@@ -11,7 +11,7 @@ extends 'CSAF::Base';
 
 our %TESTS = ();
 
-has messages => (is => 'ro', default => sub { [] });
+has messages => (is => 'rw', default => sub { [] });
 has summary  => (is => 'ro', default => sub { {} });
 has tests    => (is => 'rw', default => sub { [] });
 
