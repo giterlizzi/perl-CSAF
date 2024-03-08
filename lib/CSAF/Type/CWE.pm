@@ -3,10 +3,11 @@ package CSAF::Type::CWE;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use Moo;
 
-use CSAF::Util qw(get_weakness_name);
+use CSAF::Util::CWE qw(get_weakness_name);
 
 extends 'CSAF::Type::Base';
 

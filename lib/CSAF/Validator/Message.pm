@@ -3,6 +3,7 @@ package CSAF::Validator::Message;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use Moo;
 

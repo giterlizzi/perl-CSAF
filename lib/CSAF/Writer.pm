@@ -3,6 +3,7 @@ package CSAF::Writer;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use Carp;
 use CSAF::Util            qw(tracking_id_to_well_filename);

@@ -3,13 +3,12 @@ package CSAF::Validator::MandatoryTests;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 use version;
 
-use CSAF::Validator::Message;
-use CSAF::Util qw(
-    get_weakness_name collect_product_ids schema_cache_path
-    decode_cvss3_vector_string product_in_group_exists
-);
+use CSAF::Util::CWE  qw(get_weakness_name weakness_exists);
+use CSAF::Util::CVSS qw(decode_cvss_vector_string);
+use CSAF::Util       qw(collect_product_ids schema_cache_path product_in_group_exists);
 
 use List::MoreUtils qw(uniq duplicates);
 use List::Util      qw(first);
@@ -91,12 +90,12 @@ sub TEST_6_1_1 {
 
             foreach my $product (@products) {
                 if (!first { $product eq $_ } keys %{$product_ids}) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/product_status/$product_status",
                         code     => '6.1.1',
                         message  => "Missing Definition of Product ID ($product)"
-                    ));
+                    );
                 }
             }
 
@@ -111,12 +110,12 @@ sub TEST_6_1_1 {
 
             foreach my $product (@{$score->products}) {
                 if (!first { $product eq $_ } keys %{$product_ids}) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/scores/$score_idx/products",
                         code     => '6.1.1',
                         message  => "Missing Definition of Product ID ($product)"
-                    ));
+                    );
                 }
             }
 
@@ -131,12 +130,12 @@ sub TEST_6_1_1 {
 
             foreach my $product (@{$remediation->product_ids}) {
                 if (!first { $product eq $_ } keys %{$product_ids}) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/remediations/$remediation_idx/product_ids",
                         code     => '6.1.1',
                         message  => "Missing Definition of Product ID ($product)"
-                    ));
+                    );
                 }
             }
 
@@ -151,12 +150,12 @@ sub TEST_6_1_1 {
 
             foreach my $product (@{$threat->product_ids}) {
                 if (!first { $product eq $_ } keys %{$product_ids}) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/threats/$threat_idx/product_ids",
                         code     => '6.1.1',
                         message  => "Missing Definition of Product ID ($product)"
-                    ));
+                    );
                 }
             }
 
@@ -173,12 +172,12 @@ sub TEST_6_1_1 {
 
         foreach my $product (@{$product_group->product_ids}) {
             if (!first { $product eq $_ } keys %{$product_ids}) {
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/product_tree/product_groups/$product_group_idx/product_ids",
                     code     => '6.1.1',
                     message  => "Missing Definition of Product ID ($product)"
-                ));
+                );
             }
         }
 
@@ -195,12 +194,12 @@ sub TEST_6_1_1 {
         if (my $product = $relationship->product_reference) {
 
             if (!first { $product eq $_ } keys %{$product_ids}) {
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/product_tree/relationships/$rel_idx/product_reference",
                     code     => '6.1.1',
                     message  => "Missing Definition of Product ID ($product)"
-                ));
+                );
             }
 
         }
@@ -208,12 +207,12 @@ sub TEST_6_1_1 {
         if (my $product = $relationship->relates_to_product_reference) {
 
             if (!first { $product eq $_ } keys %{$product_ids}) {
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/product_tree/relationships/$rel_idx/relates_to_product_reference",
                     code     => '6.1.1',
                     message  => "Missing Definition of Product ID ($product)"
-                ));
+                );
             }
 
         }
@@ -238,12 +237,12 @@ sub TEST_6_1_2 {
 
         if (duplicates @product_ids) {
 
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => '/product_tree/branches[](/branches[])*/product/product_id',
                 code     => '6.1.2',
                 message  => 'Multiple Definition of Product ID'
-            ));
+            );
 
         }
 
@@ -260,12 +259,12 @@ sub TEST_6_1_2 {
 
         if (duplicates @product_ids) {
 
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => '/product_tree/full_product_names[]/product_id',
                 code     => '6.1.2',
                 message  => 'Multiple Definition of Product ID'
-            ));
+            );
 
         }
 
@@ -285,12 +284,12 @@ sub TEST_6_1_2 {
 
             if (duplicates @product_ids) {
 
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/product_tree/relationships/$rel_idx/full_product_name/product_id",
                     code     => '6.1.2',
                     message  => 'Multiple Definition of Product ID'
-                ));
+                );
 
             }
 
@@ -309,21 +308,21 @@ sub TEST_6_1_3 {
         my ($relationship, $rel_idx) = @_;
 
         if ($relationship->product_reference eq $relationship->full_product_name->product_id) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/product_tree/relationships/$rel_idx/full_product_name/product_id",
                 code     => '6.1.3',
                 message  => 'Circular Definition of Product ID'
-            ));
+            );
         }
 
         if ($relationship->relates_to_product_reference eq $relationship->full_product_name->product_id) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/product_tree/relationships/$rel_idx/full_product_name/product_id",
                 code     => '6.1.3',
                 message  => 'Circular Definition of Product ID'
-            ));
+            );
         }
 
     });
@@ -350,12 +349,12 @@ sub TEST_6_1_4 {
 
                 if (!first { $group_id eq $_ } keys %{$group_ids}) {
 
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/threats/$threat_idx/group_ids",
                         code     => '6.1.4',
                         message  => 'Missing Definition of Product Group ID'
-                    ));
+                    );
 
                 }
             }
@@ -381,12 +380,12 @@ sub TEST_6_1_5 {
             $check->{$product_id}++;
 
             if ($check->{$product_id} > 1) {
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/product_tree/product_groups/$group_idx/group_id",
                     code     => '6.1.5',
                     message  => 'Multiple Definition of Product Group ID'
-                ));
+                );
             }
 
         }
@@ -421,12 +420,12 @@ sub TEST_6_1_6 {
 
         if (duplicates @check) {
 
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/vulnerabilities/$vuln_idx/product_status",
                 code     => '6.1.6',
                 message  => 'Contradicting Product Status'
-            ));
+            );
 
         }
 
@@ -453,12 +452,12 @@ sub TEST_6_1_7 {
                 $check->{$product}++;
 
                 if ($check->{$product} > 1) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/score/$score_idx/products",
                         code     => '6.1.7',
                         message  => 'Multiple Scores with same Version per Product'
-                    ));
+                    );
                 }
 
             }
@@ -503,12 +502,12 @@ sub TEST_6_1_8 {
                 my @schema_errors = $jv->validate($cvss3->TO_JSON);
 
                 foreach my $schema_error (@schema_errors) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/scores/$score_idx/cvss_v3" . $schema_error->path,
                         code     => '6.1.8',
                         message  => sprintf('Invalid CVSS: %s', $schema_error->message)
-                    ));
+                    );
                 }
 
             }
@@ -523,12 +522,12 @@ sub TEST_6_1_8 {
                 my @schema_errors = $jv->validate($cvss2->TO_JSON);
 
                 foreach my $schema_error (@schema_errors) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/scores/$score_idx/cvss_v2" . $schema_error->path,
                         code     => '6.1.8',
                         message  => sprintf('Invalid CVSS: %s', $schema_error->message)
-                    ));
+                    );
                 }
 
             }
@@ -562,12 +561,12 @@ sub TEST_6_1_9 {    # TODO INCOMPLETE
                 my ($score_min, $score_max) = @{$cvss3_severity->{$cvss3->baseSeverity}};
 
                 unless ($cvss3->baseScore >= $score_min && $cvss3->baseScore <= $score_max) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
                         code     => '6.1.9',
                         message  => 'Invalid CVSS computation'
-                    ));
+                    );
                 }
 
             }
@@ -603,7 +602,7 @@ sub TEST_6_1_10 {    # TODO INCOMPLETE
 
                 return unless $vector_string;
 
-                my $decoded_vector_string = decode_cvss3_vector_string($vector_string);
+                my $decoded_vector_string = decode_cvss_vector_string($vector_string);
 
                 foreach my $decoded_metric (keys %{$decoded_vector_string}) {
 
@@ -611,12 +610,12 @@ sub TEST_6_1_10 {    # TODO INCOMPLETE
                     my $doc_value     = $cvss->$decoded_metric();
 
                     if ($doc_value && $doc_value ne $decoded_value) {
-                        $self->add_message(CSAF::Validator::Message->new(
+                        $self->add_message(
                             category => 'mandatory',
                             path     => "/vulnerabilities/$vuln_idx/scores/$score_idx/cvss_v3/$decoded_metric",
                             code     => '6.1.10',
                             message  => 'Inconsistent CVSS'
-                        ));
+                        );
                     }
                 }
 
@@ -638,14 +637,14 @@ sub TEST_6_1_11 {
 
         if (my $cwe_id = $vulnerability->cwe->id) {
 
-            if (!get_weakness_name($cwe_id)) {
+            if (!weakness_exists($cwe_id)) {
 
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/vulnerabilities/$vuln_idx/cwe/id",
                     code     => '6.1.11',
                     message  => 'Unknown CWE'
-                ));
+                );
 
             }
 
@@ -655,12 +654,12 @@ sub TEST_6_1_11 {
 
             if (get_weakness_name($vulnerability->cwe->id) ne $cwe_name) {
 
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/vulnerabilities/$vuln_idx/cwe/name",
                     code     => '6.1.11',
                     message  => 'CWE name differs from the official CWE catalog'
-                ));
+                );
 
             }
         }
@@ -679,21 +678,21 @@ sub TEST_6_1_12 {    # TODO INCOMPLETE
     my $document_source_lang = $self->csaf->document->source_lang;
 
     if ($document_lang && $document_lang !~ /[a-z]{2,3}/) {
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/document/lang',
             code     => '6.1.12',
             message  => 'Language code is invalid'
-        ));
+        );
     }
 
     if ($document_source_lang && $document_source_lang !~ /[a-z]{2,3}/) {
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/document/source_lang',
             code     => '6.1.12',
             message  => 'Language code is invalid'
-        ));
+        );
     }
 
 }
@@ -763,12 +762,12 @@ sub TEST_6_1_14 {
         eval {
             if ($prev_revision_number && version->parse($prev_revision_number) > version->parse($revision_number)) {
 
-                return $self->add_message(CSAF::Validator::Message->new(
+                return $self->add_message(
                     category => 'mandatory',
                     path     => '/document/tracking/revision_history',
                     code     => '6.1.14',
                     message  => 'Sorted Revision History'
-                ));
+                );
 
             }
         };
@@ -779,12 +778,12 @@ sub TEST_6_1_14 {
 
         if (version->parse($last_rev_version) > version->parse($doc_version)) {
 
-            return $self->add_message(CSAF::Validator::Message->new(
+            return $self->add_message(
                 category => 'mandatory',
                 path     => '/document/tracking/revision_history',
                 code     => '6.1.14',
                 message  => 'Sorted Revision History'
-            ));
+            );
 
         }
 
@@ -798,12 +797,12 @@ sub TEST_6_1_15 {
 
     if ($self->csaf->document->publisher->category eq 'translator' && !$self->csaf->document->source_lang) {
 
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/document/publisher/category',
             code     => '6.1.15',
             message  => 'Missing "source_lang" for "translator" publisher category'
-        ));
+        );
 
     }
 
@@ -826,12 +825,12 @@ sub TEST_6_1_16 {
 
         if (version->parse($last_version) > version->parse($self->csaf->document->tracking->version)) {
 
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => '/document/tracking/version',
                 code     => '6.1.16',
                 message  => 'Detected newer revision of document'
-            ));
+            );
 
         }
 
@@ -849,12 +848,12 @@ sub TEST_6_1_17 {
     $document_version =~ /$SEMVER_REGEXP/;
 
     if ($document_status ne 'draft' && ($document_version eq '0' || (%+ && ($+{major} == 0 || $+{prerelease})))) {
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/document/tracking/version',
             code     => '6.1.17',
             message  => 'Incompatible document status & version'
-        ));
+        );
     }
 
 }
@@ -875,12 +874,12 @@ sub TEST_6_1_18 {
             $revision->number =~ /$SEMVER_REGEXP/;
 
             if ($revision->number eq '0' || (%+ && ($+{major} == 0))) {
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/document/tracking/revision_history/$rev_idx/number",
                     code     => '6.1.18',
                     message  => 'Incompatible revision number with document status'
-                ));
+                );
             }
 
         });
@@ -902,12 +901,12 @@ sub TEST_6_1_19 {
         $revision->number =~ /$SEMVER_REGEXP/;
 
         if (%+ && $+{prerelease}) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/document/tracking/revision_history/$rev_idx/number",
                 code     => '6.1.19',
                 message  => 'Revision History contains a pre-release'
-            ));
+            );
         }
 
     });
@@ -926,12 +925,12 @@ sub TEST_6_1_20 {
         $document_version =~ /$SEMVER_REGEXP/;
 
         if (%+ && $+{prerelease}) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => '/document/tracking/version',
                 code     => '6.1.20',
                 message  => qq{Detected a pre-release version with "$document_status" document}
-            ));
+            );
         }
     }
 
@@ -952,12 +951,12 @@ sub TEST_6_1_21 {
 
     foreach my $revision_number (sort @revision_numbers) {
         if (($revision_number - $prev_revision_number) > 1) {
-            return $self->add_message(CSAF::Validator::Message->new(
+            return $self->add_message(
                 category => 'mandatory',
                 path     => '/document/tracking/revision_history',
                 code     => '6.1.21',
                 message  => 'Missing Item in Revision History'
-            ));
+            );
         }
         $prev_revision_number = $revision_number;
     }
@@ -978,12 +977,12 @@ sub TEST_6_1_22 {
 
         if ($check->{$revision->number} > 1) {
 
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/document/tracking/revision_history/$rev_idx/number",
                 code     => '6.1.22',
                 message  => 'Multiple Definition in Revision History'
-            ));
+            );
 
         }
 
@@ -1006,12 +1005,12 @@ sub TEST_6_1_23 {
         $check->{$vulnerability->cve}++;
 
         if ($check->{$vulnerability->cve} > 1) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/vulnerabilities/$vuln_idx/cve",
                 code     => '6.1.23',
                 message  => sprintf('Multiple Use of Same CVE (%s)', $vulnerability->cve)
-            ));
+            );
         }
 
     });
@@ -1032,17 +1031,19 @@ sub TEST_6_1_24 {
 
         foreach my $involvement ($vulnerability->involvements->each) {
 
+            next unless ($involvement->date);
+
             $check->{$involvement->date->epoch} //= {};
             $check->{$involvement->date->epoch}->{$involvement->party} //= 0;
             $check->{$involvement->date->epoch}->{$involvement->party}++;
 
             if ($check->{$involvement->date->epoch}->{$involvement->party} > 1) {
-                return $self->add_message(CSAF::Validator::Message->new(
+                return $self->add_message(
                     category => 'mandatory',
                     path     => "/vulnerabilities/$vuln_idx/involvements",
                     code     => '6.1.24',
                     message  => 'Multiple Definition in Involvements'
-                ));
+                );
             }
         }
 
@@ -1091,12 +1092,12 @@ sub TEST_6_1_25 {    # TODO INCOMPLETE
                     my $path = "/product_tree/full_product_names/$idx/product_identification_helper"
                         . "/hashes/$hash_idx/file_hashes/$file_hash_idx/";
 
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => $path,
                         code     => '6.1.25',
                         message  => sprintf('Multiple Use of Same Hash Algorithm (%s)', $file_hash->algorithm)
-                    ));
+                    );
 
                 }
 
@@ -1119,12 +1120,12 @@ sub TEST_6_1_26 {
     {
 
         if ($document_category =~ /^csaf_/i) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => '/document/category',
                 code     => '6.1.26',
                 message  => 'Reserved CSAF document category prefix'
-            ));
+            );
         }
 
         my $check_similar_category = 0;
@@ -1139,12 +1140,12 @@ sub TEST_6_1_26 {
         (my $normalized_category = lc $document_category) =~ s/[-_\s]//g;
 
         if (first { $normalized_category =~ /^$_/ } @similar_categories) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => '/document/category',
                 code     => '6.1.26',
                 message  => 'Prohibited document category'
-            ));
+            );
         }
 
     }
@@ -1168,13 +1169,13 @@ sub TEST_6_1_27_1 {
     }
 
     if (not $have_valid_category) {
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/document/notes',
             code     => '6.1.27.1',
             message  =>
                 'The document notes do not contain an item which has a category of "description", "details", "general" or "summary"'
-        ));
+        );
     }
 
 }
@@ -1195,12 +1196,12 @@ sub TEST_6_1_27_2 {
     }
 
     if (not $have_external_references) {
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/document/references',
             code     => '6.1.27.2',
             message  => 'The document references do not contain any item which has the category "external"'
-        ));
+        );
     }
 
 }
@@ -1211,13 +1212,13 @@ sub TEST_6_1_27_3 {
 
     if ($self->csaf->document->category eq 'csaf_informational_advisory' && @{$self->csaf->vulnerabilities->items}) {
 
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/vulnerabilities',
             code     => '6.1.27.3',
             message  =>
                 'The "csaf_informational_advisory" profile deals with information that are not classified as vulnerabilities. Therefore, it must not have the "/vulnerabilities" element'
-        ));
+        );
 
     }
 
@@ -1232,12 +1233,12 @@ sub TEST_6_1_27_4 {
 
     if ($document_category =~ /(csaf_security_advisory|csaf_vex)/ && !$product_tree) {
 
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/product_tree',
             code     => '6.1.27.4',
             message  => 'The element "/product_tree" does not exist'
-        ));
+        );
 
     }
 
@@ -1254,12 +1255,12 @@ sub TEST_6_1_27_5 {
         my ($vulnerability, $vuln_idx) = @_;
 
         if (!$vulnerability->notes->size) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/vulnerabilities/$vuln_idx",
                 code     => '6.1.27.5',
                 message  => 'The vulnerability item has no "notes" element'
-            ));
+            );
         }
 
     });
@@ -1277,12 +1278,12 @@ sub TEST_6_1_27_6 {
         my ($vulnerability, $vuln_idx) = @_;
 
         if (!$vulnerability->product_status->TO_CSAF) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/vulnerabilities/$vuln_idx",
                 code     => '6.1.27.6',
                 message  => 'The vulnerability item has no "product_status" element'
-            ));
+            );
         }
 
     });
@@ -1307,13 +1308,13 @@ sub TEST_6_1_27_7 {
         );
 
         unless (@check) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/vulnerabilities/$vuln_idx/product_status",
                 code     => '6.1.27.7',
                 message  =>
                     'None of the elements "fixed", "known_affected", "known_not_affected", or "under_investigation" is present in "product_status"'
-            ));
+            );
         }
 
     });
@@ -1331,12 +1332,12 @@ sub TEST_6_1_27_8 {
         my ($vulnerability, $vuln_idx) = @_;
 
         if (!$vulnerability->cve && $vulnerability->ids->size == 0) {
-            $self->add_message(CSAF::Validator::Message->new(
+            $self->add_message(
                 category => 'mandatory',
                 path     => "/vulnerabilities/$vuln_idx",
                 code     => '6.1.27.8',
                 message  => 'None of the elements "cve" or "ids" is present'
-            ));
+            );
         }
 
     });
@@ -1412,13 +1413,13 @@ sub TEST_6_1_27_9 {
             });
 
             if (!$flag_test && !$threat_test) {
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     =>
                         sprintf('/vulnerabilities/%s/product_status/known_not_affected/%s', $vuln_idx, $product_id_idx),
                     code    => '6.1.27.9',
                     message => 'Impact Statement'
-                ));
+                );
             }
 
         });
@@ -1473,12 +1474,12 @@ sub TEST_6_1_27_10 {
             });
 
             if (!$threat_test) {
-                $self->add_message(CSAF::Validator::Message->new(
+                $self->add_message(
                     category => 'mandatory',
                     path     => "/vulnerabilities/$vuln_idx/product_status/known_not_affected/$product_id_idx",
                     code     => '6.1.27.10',
                     message  => 'Action Statement'
-                ));
+                );
             }
 
         });
@@ -1495,12 +1496,12 @@ sub TEST_6_1_27_11 {
         && $self->csaf->vulnerabilities->size == 0)
     {
 
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/vulnerabilities',
             code     => '6.1.27.11',
             message  => 'The element "/vulnerabilities" does not exist'
-        ));
+        );
 
     }
 
@@ -1514,12 +1515,12 @@ sub TEST_6_1_28 {
     my $document_source_lang = $self->csaf->document->source_lang;
 
     if ($document_lang && $document_source_lang && ($document_lang eq $document_source_lang)) {
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => '/document/lang',
             code     => '6.1.28',
             message  => qq{The document language and the source language have the same value "$document_lang"}
-        ));
+        );
     }
 
 }
@@ -1544,12 +1545,12 @@ sub TEST_6_1_29 {
 
             foreach my $product_id (keys %{$product_ids}) {
                 if (!first { $product_id eq $_ } @{$remediation->product_ids}) {
-                    return $self->add_message(CSAF::Validator::Message->new(
+                    return $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/remediations/$remediation_idx",
                         code     => '6.1.29',
                         message  => 'Remediation without Product Reference'
-                    ));
+                    );
                 }
             }
 
@@ -1593,12 +1594,12 @@ sub TEST_6_1_30 {
     }
 
     if ($document_ver_in_int && $revision_ver_in_semver || $document_ver_in_semver && $revision_ver_in_int) {
-        $self->add_message(CSAF::Validator::Message->new(
+        $self->add_message(
             category => 'mandatory',
             path     => "/document/tracking/version",
             code     => '6.1.30',
             message  => 'Mixed Integer and Semantic Versioning'
-        ));
+        );
     }
 
 }
@@ -1632,32 +1633,32 @@ sub TEST_6_1_32 {
             my ($flag, $flag_idx) = @_;
 
             if (!@{$flag->group_ids} && !@{$flag->product_ids}) {
-                return $self->add_message(CSAF::Validator::Message->new(
+                return $self->add_message(
                     category => 'mandatory',
                     path     => "/vulnerabilities/$vuln_idx/flags/$flag_idx",
                     code     => '6.1.32',
                     message  => 'Flag without Product Reference'
-                ));
+                );
             }
 
             foreach my $product (keys %{$product_ids}) {
 
                 if (@{$flag->product_ids} && !first { $product eq $_ } @{$flag->product_ids}) {
-                    return $self->add_message(CSAF::Validator::Message->new(
+                    return $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/flags/$flag_idx",
                         code     => '6.1.32',
                         message  => 'Flag without Product Reference'
-                    ));
+                    );
                 }
 
                 if (@{$flag->group_ids} && !first { $product eq $_ } @{$flag->group_ids}) {
-                    return $self->add_message(CSAF::Validator::Message->new(
+                    return $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/flags/$flag_idx",
                         code     => '6.1.32',
                         message  => 'Flag without Product Reference'
-                    ));
+                    );
                 }
             }
 
@@ -1686,12 +1687,12 @@ sub TEST_6_1_33 {
             foreach my $product_id (@{$flag->product_ids}) {
 
                 if (first { $product_id eq $_ } @product_ids) {
-                    return $self->add_message(CSAF::Validator::Message->new(
+                    return $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/flags/$flag_idx",
                         code     => '6.1.33',
                         message  => 'Multiple Flags with VEX Justification Codes per Product'
-                    ));
+                    );
                 }
 
                 push @product_ids, $product_id;
@@ -1709,12 +1710,12 @@ sub TEST_6_1_33 {
                         foreach my $product_id (@{$group->product_ids}) {
 
                             if (first { $product_id eq $_ } @product_ids) {
-                                return $self->add_message(CSAF::Validator::Message->new(
+                                return $self->add_message(
                                     category => 'mandatory',
                                     path     => "/vulnerabilities/$vuln_idx/flags/$flag_idx",
                                     code     => '6.1.33',
                                     message  => 'Multiple Flags with VEX Justification Codes per Product'
-                                ));
+                                );
                             }
 
                             push @product_ids, $product_id;
@@ -1762,13 +1763,13 @@ sub _TEST_6_1_25_branches {
 
                     if ($check->{$file_hash->algorithm} > 1) {
 
-                        $self->add_message(CSAF::Validator::Message->new(
+                        $self->add_message(
                             type => 'Mandatory Test',
                             path =>
                                 "/$path/$branch_idx/product_identification_helper/hashes/$hash_idx/file_hashes/$file_hash_idx/",
                             code    => '6.1.25',
                             message => sprintf('Multiple Use of Same Hash Algorithm (%s)', $file_hash->algorithm)
-                        ));
+                        );
 
                     }
 
@@ -1801,23 +1802,23 @@ sub _TEST_6_1_31_branches {
             foreach my $word (@bad_words) {
 
                 if (first { $word eq $_ } @branch_name_parts) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "$path/name",
                         code     => '6.1.31',
                         message  => 'Version Range in Product Version'
-                    ));
+                    );
                 }
             }
 
             foreach my $range (@bad_ranges) {
                 if (lc $branch->name =~ /$range/) {
-                    $self->add_message(CSAF::Validator::Message->new(
+                    $self->add_message(
                         category => 'mandatory',
                         path     => "$path/name",
                         code     => '6.1.31',
                         message  => 'Version Range in Product Version'
-                    ));
+                    );
                 }
             }
         }
@@ -1841,12 +1842,7 @@ sub _TEST_6_1_13_check_purl {
     }
 
     if ($is_invalid) {
-        $self->add_message(CSAF::Validator::Message->new(
-            category => 'mandatory',
-            path     => $path,
-            code     => '6.1.13',
-            message  => 'Invalid purl'
-        ));
+        $self->add_message(category => 'mandatory', path => $path, code => '6.1.13', message => 'Invalid purl');
     }
 
 }

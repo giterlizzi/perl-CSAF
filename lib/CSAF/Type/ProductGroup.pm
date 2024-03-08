@@ -3,6 +3,7 @@ package CSAF::Type::ProductGroup;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use Moo;
 extends 'CSAF::Type::Base';
@@ -13,9 +14,7 @@ has product_ids => (is => 'rw', required => 1, default => sub { [] });
 has summary     => (is => 'rw');
 
 sub _trigger_group_id {
-    my ($self) = @_;
-
-    $CSAF::CACHE->{groups}->{$self->group_id} = $self->product_ids;
+    $CSAF::CACHE->{groups}->{$_[0]->group_id} = $_[0]->product_ids;
 }
 
 sub TO_CSAF {

@@ -3,6 +3,7 @@ package CSAF::Validator::Schema;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use CSAF::Util qw(schema_cache_path);
 use CSAF::Builder;
@@ -23,12 +24,7 @@ sub validate {
     my @errors = $jv->validate(CSAF::Builder->new(shift->csaf)->build(1));
 
     foreach my $error (@errors) {
-        $self->add_message(CSAF::Validator::Message->new(
-            category => 'schema',
-            message  => $error->message,
-            path     => $error->path,
-            code     => '9.1.14'
-        ));
+        $self->add_message(category => 'schema', message => $error->message, path => $error->path, code => '9.1.14');
     }
 
     return @{$self->messages};

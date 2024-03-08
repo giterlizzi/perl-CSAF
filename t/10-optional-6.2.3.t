@@ -48,8 +48,6 @@ $csaf->product_tree->full_product_names->add(name => 'Product B', product_id => 
 my $vulns = $csaf->vulnerabilities;
 my $vuln  = $vulns->add(cve => 'CVE-2023-00000');
 
-$vuln->scores->add(products => ['CSAFPID-9080701']);
-
 $vuln->product_status->first_affected(['CSAFPID-9080700']);
 
 exec_validator_optional_test($csaf, '6.2.3');

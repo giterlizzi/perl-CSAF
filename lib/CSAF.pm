@@ -3,6 +3,7 @@ package CSAF;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use CSAF::Builder;
 use CSAF::Writer;
@@ -13,17 +14,14 @@ use CSAF::Document;
 
 use overload '""' => \&to_string, fallback => 1;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 our $CACHE = {};
 
 sub new {
 
     my $class = shift;
-
-    $CACHE = {};    # Reset Cache
-
-    my $self = {_ => CSAF::Document->new};
+    my $self  = {_ => CSAF::Document->new};
 
     return bless $self, $class;
 
@@ -50,6 +48,10 @@ sub render   { shift->renderer->render(@_) }
 sub to_string { shift->renderer->render }
 sub TO_JSON   { shift->builder->TO_JSON }
 
+sub DESTROY {
+    $CACHE = {};    # Reset Cache
+}
+
 1;
 
 __END__
@@ -66,24 +68,45 @@ CSAF - Common Security Advisory Framework
 
     $csaf->document->title('Base CSAF Document');
     $csaf->document->category('csaf_security_advisory');
-    $csaf->document->publisher(category => 'vendor', name => 'CSAF', namespace => 'https://csaf.io');
+    $csaf->document->publisher(
+        category  => 'vendor',
+        name      => 'CSAF',
+        namespace => 'https://csaf.io'
+    );
 
     my $tracking = $csaf->document->tracking(
-        id                   => 'CSAF:2023-001',
+        id                   => 'CSAF:2024-001',
         status               => 'final',
         version              => '1.0.0',
         initial_release_date => 'now',
         current_release_date => 'now'
     );
 
-    $tracking->revision_history->add(date => 'now', summary => 'First release', number => '1');
+    $tracking->revision_history->add(
+        date    => 'now',
+        summary => 'First release',
+        number  => '1'
+    );
+
+    my @errors = $csaf->validate;
+
+    if (@errors) {
+        say $_ for (@errors);
+        Carp::croak "Validation errors";
+    }
+
+    $csaf->writer(directory => '/var/www/html/csaf')->write;
 
 
 =head1 DESCRIPTION
 
-The Common Security Advisory Framework (CSAF) Version 2.0 is the definitive reference for the language which supports
-creation, update, and interoperable exchange of security advisories as structured information on products,
-vulnerabilities and the status of impact and remediation among interested parties.
+The Common Security Advisory Framework (CSAF) Version 2.0 is the definitive 
+reference for the language which supports creation, update, and interoperable 
+exchange of security advisories as structured information on products, 
+vulnerabilities and the status of impact and remediation among interested 
+parties.
+
+L<https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html>
 
 
 =head2 CSAF PROPERTIES

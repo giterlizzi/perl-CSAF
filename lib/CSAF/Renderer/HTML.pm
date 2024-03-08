@@ -3,6 +3,7 @@ package CSAF::Renderer::HTML;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use CSAF::Util qw(tt_templates_path);
 use Template;

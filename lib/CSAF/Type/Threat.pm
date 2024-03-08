@@ -3,6 +3,7 @@ package CSAF::Type::Threat;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use CSAF::Util qw(check_datetime);
 

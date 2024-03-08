@@ -7,10 +7,17 @@ use FindBin '$RealBin';
 use Test::More;
 use CSAF::Util qw(file_read JSON);
 use CSAF::Parser;
+use List::Util qw(first);
 
-use Data::Dumper;
+use constant DEBUG => $ENV{CSAF_TEST_DEBUG};
 
 my $testcases = JSON->decode(file_read("$RealBin/official-testcases/testcases.json"));
+
+my @SKIP_TESTCASES = (
+    '6.2.10', # Missing TLP label (CSAF::Type::TLP have default label)
+    '6.2.12', # Missing Document Language (CSAF::Document have "en" for default language)
+    '6.2.20', # Additional Properties (in CSAF::Document isn't possible add new properties)
+);
 
 foreach my $testcase (@{$testcases->{tests}}) {
 
@@ -20,6 +27,11 @@ foreach my $testcase (@{$testcases->{tests}}) {
     if (defined $ENV{TESTCASE}) {
         next unless ($testcase_id eq $ENV{TESTCASE});
         diag "Test only $ENV{TESTCASE} testcase";
+    }
+
+    if (first { $testcase_id eq $_ } @SKIP_TESTCASES) {
+        diag "Testcase $testcase_id skipped";
+        next;
     }
 
     next if ($testcase_group =~ /(informative|optional)/);
@@ -34,13 +46,16 @@ foreach my $testcase (@{$testcases->{tests}}) {
         my $test_name = $test->{name};
         my $is_valid  = $test->{valid};
 
-        diag("[$testcase_id - $testcase_group] Test file: $test_name [valid => $is_valid]");
-
         my $parser    = CSAF::Parser->new(file => "$RealBin/official-testcases/$test_name");
         my $csaf      = $parser->parse;
         my $doc_title = $csaf->document->title;
 
-        diag("[$testcase_id - $testcase_group] $doc_title");
+        if ($testcase_group eq 'optional' && $doc_title =~ /failing/) {
+            $is_valid = 0;
+        }
+
+        DEBUG and diag("[$testcase_id - $testcase_group] Test file: $test_name [valid => $is_valid]");
+        DEBUG and diag("[$testcase_id - $testcase_group] $doc_title");
 
         my @messages = $csaf->validate;
 
@@ -48,10 +63,10 @@ foreach my $testcase (@{$testcases->{tests}}) {
 
         foreach my $message (@messages) {
 
-            next if ($message->category ne 'mandatory');
+            #next if ($message->category ne 'mandatory');
             next if ($message->code ne $testcase_id);
 
-            diag($message);
+            DEBUG and diag($message);
             $n_errors++;
 
         }

@@ -3,6 +3,7 @@ package CSAF::Util::List;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use Moo;
 
@@ -65,7 +66,7 @@ __END__
 
 =head1 NAME
 
-CSAF::Util::List - Collection utility
+CSAF::Util::List - (Mojo like) collection utility
 
 =head1 SYNOPSIS
 

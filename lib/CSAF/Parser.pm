@@ -3,26 +3,32 @@ package CSAF::Parser;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use CSAF;
 use CSAF::Util qw(JSON file_read);
 
 use Moo;
 
-has file => (is => 'ro', required => 1);
+has file    => (is => 'ro');
+has content => (is => 'ro');
 
 sub parse {
 
-    my $self = shift;
+    my $self    = shift;
+    my $content = $self->content;
 
-    Carp::croak qq{File $self->file not found} unless (-e $self->file);
+    if ($self->file) {
+        Carp::croak sprintf('File "%s" not found', $self->file) unless (-e $self->file);
+        $content = file_read($self->file);
+    }
 
-    my $content = file_read($self->file);
-    my $json    = eval { JSON->decode($content) };
+    Carp::croak "Empty 'content'" unless $content;
 
-    Carp::croak qq{Failed to parse $self->file: $@} if ($@);
+    my $json = eval { JSON->decode($content) };
 
-    Carp::croak qq{Invalid CSAF document} unless (defined $json->{document});
+    Carp::croak "Failed to parse the CSAF document: $@" if ($@);
+    Carp::croak 'Invalid CSAF document' unless (exists $json->{document});
 
     my $csaf = CSAF->new;
 
@@ -31,6 +37,7 @@ sub parse {
         $csaf->document->title($document->{title});
         $csaf->document->category($document->{category});
         $csaf->document->csaf_version($document->{csaf_version});
+
         $csaf->document->lang($document->{lang})               if ($document->{lang});
         $csaf->document->source_lang($document->{source_lang}) if ($document->{source_lang});
 
@@ -117,6 +124,10 @@ sub parse {
                 $vuln->flags->item(%{$_}) for (@{$flags});
             }
 
+            if (my $ids = $vulnerability->{ids}) {
+                $vuln->ids->item(%{$_}) for (@{$ids});
+            }
+
         }
     }
 
@@ -126,7 +137,7 @@ sub parse {
         my $csaf_product_tree = $csaf->product_tree;
 
         if (my $branches = $product_tree->{branches}) {
-            branches_walk($branches, $csaf_product_tree);
+            _branches_walk($branches, $csaf_product_tree);
         }
 
         if (my $relationships = $product_tree->{relationships}) {
@@ -147,13 +158,13 @@ sub parse {
 
 }
 
-sub branches_walk {
+sub _branches_walk {
 
     my ($branches, $csaf) = @_;
 
     foreach my $branch (@{$branches}) {
         if (defined $branch->{branches}) {
-            branches_walk($branch->{branches}, $csaf->branches->item(%{$branch}));
+            _branches_walk($branch->{branches}, $csaf->branches->item(%{$branch}));
         }
         else {
             $csaf->branches->item(%{$branch});
@@ -195,7 +206,41 @@ Simple CSAF parser.
 
 =item file
 
-CSAF file.
+CSAF document file.
+
+=item content
+
+CSAF document string.
+
+    my $parser = CSAF::Parser->new(content => <<JSON);
+    {
+      "document": {
+        "category": "csaf_base",
+        "csaf_version": "2.0",
+        "publisher": {
+          "category": "other",
+          "name": "OASIS CSAF TC",
+          "namespace": "https://csaf.io"
+        },
+        "title": "Template for generating CSAF files for Validator examples",
+        "tracking": {
+          "current_release_date": "2021-07-21T10:00:00.000Z",
+          "id": "OASIS_CSAF_TC-CSAF_2.0-2021-TEMPLATE",
+          "initial_release_date": "2021-07-21T10:00:00.000Z",
+          "revision_history": [
+            {
+              "date": "2021-07-21T10:00:00.000Z",
+              "number": "1",
+              "summary": "Initial version."
+            }
+          ],
+          "status": "final",
+          "version": "1"
+        }
+      }
+    }
+    JSON
+
 
 =back
 

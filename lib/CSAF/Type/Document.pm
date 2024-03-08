@@ -3,6 +3,7 @@ package CSAF::Type::Document;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use Moo;
 use Carp;
@@ -19,7 +20,7 @@ extends 'CSAF::Type::Base';
 
 has category     => (is => 'rw', default => 'csaf_base', required => 1);
 has csaf_version => (is => 'rw', default => '2.0');
-has lang         => (is => 'rw', default => 'en', coerce => sub { (my $lang = $_[0]) =~ tr /_/-/; $lang });
+has lang         => (is => 'rw', default => 'en', coerce  => sub { (my $lang = $_[0]) =~ tr /_/-/; $lang });
 has title        => (is => 'rw');
 has source_lang  => (is => 'rw', coerce => sub { (my $lang = $_[0]) =~ tr /_/-/; $lang });
 

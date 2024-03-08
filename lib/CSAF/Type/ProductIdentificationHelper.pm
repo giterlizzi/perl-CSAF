@@ -3,6 +3,7 @@ package CSAF::Type::ProductIdentificationHelper;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use CSAF::Type::Hashes;
 use CSAF::Type::GenericURIs;
@@ -64,7 +65,7 @@ sub TO_CSAF {
     }
 
     if (my $hashes = $self->{hashes}) {
-        $output->{hashes} = $hashes->TO_CSAF;
+        $output->{hashes} = $hashes->TO_CSAF if ($hashes->size);
     }
 
     return $output;

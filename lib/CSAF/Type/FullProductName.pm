@@ -3,6 +3,7 @@ package CSAF::Type::FullProductName;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use CSAF::Type::ProductIdentificationHelper;
 
@@ -14,8 +15,7 @@ has product_id                    => (is => 'rw', required => 1, trigger => 1);
 has product_identification_helper => (is => 'rw', trigger  => 1);
 
 sub _trigger_product_id {
-    my ($self) = @_;
-    $CSAF::CACHE->{products}->{$self->product_id} = $self->name;
+    $CSAF::CACHE->{products}->{$_[0]->product_id} = $_[0]->name;
 }
 
 sub _trigger_product_identification_helper {

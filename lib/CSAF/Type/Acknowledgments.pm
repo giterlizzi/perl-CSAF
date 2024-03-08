@@ -3,6 +3,7 @@ package CSAF::Type::Acknowledgments;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 use Moo;
 extends 'CSAF::Type::List';

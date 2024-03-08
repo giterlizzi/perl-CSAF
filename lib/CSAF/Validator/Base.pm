@@ -3,7 +3,9 @@ package CSAF::Validator::Base;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
+use CSAF::Validator::Message;
 use List::Util qw(first);
 
 use Moo;
@@ -18,16 +20,18 @@ has tests    => (is => 'rw', default => sub { [] });
 sub validate { Carp::croak 'Method "validate" not implemented by subclass' }
 
 sub has_error {
-    (first { $_->type eq 'error' } @{$_[0]->messages}) ? 1 : 0;
+    return (first { $_->type eq 'error' } @{$_[0]->messages}) ? 1 : 0;
 }
 
 sub has_warning {
-    (first { $_->type eq 'warning' } @{$_[0]->messages}) ? 1 : 0;
+    return (first { $_->type eq 'warning' } @{$_[0]->messages}) ? 1 : 0;
 }
 
 sub add_message {
 
-    my ($self, $message) = @_;
+    my ($self, %params) = @_;
+
+    my $message = CSAF::Validator::Message->new(%params);
 
     $self->{messages} ||= [];
     $self->{summary}->{$message->code} ||= [];

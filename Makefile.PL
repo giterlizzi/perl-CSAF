@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
@@ -10,7 +11,7 @@ WriteMakefile(
     VERSION_FROM       => 'lib/CSAF.pm',
     ABSTRACT_FROM      => 'lib/CSAF.pm',
     LICENSE            => 'artistic_2',
-    EXE_FILES          => [],
+    EXE_FILES          => ['bin/csaf-validator'],
     MIN_PERL_VERSION   => 5.010,
     PL_FILES           => {},
     CONFIGURE_REQUIRES => {'ExtUtils::MakeMaker' => '0'},
