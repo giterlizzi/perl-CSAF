@@ -6,33 +6,47 @@ use warnings;
 use utf8;
 
 use CSAF;
-use CSAF::Util qw(JSON file_read);
+use CSAF::Util qw(file_read);
+use CSAF::Schema;
+use List::Util qw(first);
+use Cpanel::JSON::XS;
 
 use Moo;
 
 has file    => (is => 'ro');
 has content => (is => 'ro');
+has data    => (is => 'rw');
 
 sub parse {
 
-    my $self    = shift;
-    my $content = $self->content;
+    my $self = shift;
 
-    if ($self->file) {
-        Carp::croak sprintf('File "%s" not found', $self->file) unless (-e $self->file);
-        $content = file_read($self->file);
+    if ($self->content || $self->file) {
+
+        my $content = $self->content;
+
+        if ($self->file) {
+            Carp::croak sprintf('File "%s" not found', $self->file) unless (-e $self->file);
+            $content = file_read($self->file);
+        }
+
+        Carp::croak "Empty 'content'" unless $content;
+
+        my $json = eval { Cpanel::JSON::XS->new->decode($content) };
+
+        Carp::croak "Failed to parse the CSAF document: $@" if ($@);
+
+        $self->data($json);
+
     }
 
-    Carp::croak "Empty 'content'" unless $content;
+    my $data = $self->data;
 
-    my $json = eval { JSON->decode($content) };
-
-    Carp::croak "Failed to parse the CSAF document: $@" if ($@);
-    Carp::croak 'Invalid CSAF document' unless (exists $json->{document});
+    Carp::croak 'Invalid CSAF document' unless (exists $data->{document});
 
     my $csaf = CSAF->new;
 
-    if (my $document = $json->{document}) {
+    if (my $document = $data->{document}) {
 
         $csaf->document->title($document->{title});
         $csaf->document->category($document->{category});
@@ -79,7 +93,7 @@ sub parse {
 
     }
 
-    if (my $vulnerabilities = $json->{vulnerabilities}) {
+    if (my $vulnerabilities = $data->{vulnerabilities}) {
         foreach my $vulnerability (@{$vulnerabilities}) {
 
             my $vuln = $csaf->vulnerabilities->item(cve => $vulnerability->{cve});
@@ -132,7 +146,7 @@ sub parse {
     }
 
 
-    if (my $product_tree = $json->{product_tree}) {
+    if (my $product_tree = $data->{product_tree}) {
 
         my $csaf_product_tree = $csaf->product_tree;
 
@@ -152,6 +166,23 @@ sub parse {
             $csaf_product_tree->full_product_names->item(%{$_}) for (@{$full_product_names});
         }
 
+    }
+
+    my $v = $csaf->validator;
+
+    my $schema = CSAF::Schema->validator('strict-csaf-2.0');
+    my @errors = $schema->validate($data);
+
+    foreach my $error (@errors) {
+        if (first { 'additionalProperties' eq $_ } @{$error->details}) {
+            $v->add_message(
+                type     => 'warning',
+                category => 'optional',
+                path     => $error->path,
+                code     => '6.2.20',
+                message  => $error->message
+            );
+        }
     }
 
     return $csaf;
@@ -198,11 +229,15 @@ CSAF::Parser - Parse a CSAF document
 
 =head1 DESCRIPTION
 
-Simple CSAF parser.
+CSAF document parser.
 
 =head2 ATTRIBUTES
 
 =over
+
+=item data
+
+CSAF document hash.
 
 =item file
 
@@ -211,6 +246,24 @@ CSAF document file.
 =item content
 
 CSAF document string.
+
+=back
+
+=head2 METHODS
+
+=over
+
+=item new ([file => ($path | <FH>) | content => $json_string | data => $hash])
+
+CSAF document file:
+
+    my $parser = CSAF::Parser->new(file => 'csaf-2023-01.json');
+
+    open (my $fh, '<', 'csaf-2023-01.json') or die $!;
+    my $parser = CSAF::Parser->new(file => $fh);
+
+
+CSAF document in JSON string format:
 
     my $parser = CSAF::Parser->new(content => <<JSON);
     {
@@ -242,11 +295,34 @@ CSAF document string.
     JSON
 
 
-=back
+CSAF document hash:
 
-=head2 METHODS
-
-=over
+    my $parser = CSAF::Parser->new(data => {
+      "document" => {
+        "category" => "csaf_base",
+        "csaf_version" => "2.0",
+        "publisher" => {
+          "category" => "other",
+          "name" => "OASIS CSAF TC",
+          "namespace" => "https://csaf.io"
+        },
+        "title" => "Template for generating CSAF files for Validator examples",
+        "tracking" => {
+          "current_release_date" => "2021-07-21T10:00:00.000Z",
+          "id" => "OASIS_CSAF_TC-CSAF_2.0-2021-TEMPLATE",
+          "initial_release_date" => "2021-07-21T10:00:00.000Z",
+          "revision_history" => [
+            {
+              "date" => "2021-07-21T10:00:00.000Z",
+              "number" => 1,
+              "summary" => "Initial version."
+            }
+          ],
+          "status" => "final",
+          "version" => 1
+        }
+      }
+    });
 
 =item parse
 

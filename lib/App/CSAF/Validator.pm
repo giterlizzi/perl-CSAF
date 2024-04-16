@@ -10,15 +10,8 @@ use Pod::Usage;
 use Carp;
 
 use CSAF;
+use CSAF::Util::App qw(cli_error cli_version);
 use CSAF::Parser;
-
-our $VERSION = $CSAF::VERSION;
-
-sub cli_error {
-    my ($error) = @_;
-    $error =~ s/ at .* line \d+.*//;
-    print STDERR "ERROR: $error\n";
-}
 
 sub run {
 
@@ -34,32 +27,14 @@ sub run {
 
             help|h
             man
-            v
+            version|v
         )
     ) or pod2usage(-verbose => 0);
 
     pod2usage(-exitstatus => 0, -verbose => 2) if defined $options{man};
     pod2usage(-exitstatus => 0, -verbose => 0) if defined $options{help};
 
-    if (defined $options{v}) {
-
-        (my $progname = $0) =~ s/.*\///;
-
-        say <<"VERSION";
-$progname version $CSAF::VERSION
-
-Copyright 2023-2024, Giuseppe Di Terlizzi <gdt\@cpan.org>
-
-This program is part of the CSAF distribution and is free software;
-you can redistribute it and/or modify it under the same terms as Perl itself.
-
-Complete documentation for $progname can be found using 'man $progname'
-or on the internet at <https://metacpan.org/dist/CSAF>.
-VERSION
-
-        return 0;
-
-    }
+    return cli_version if defined $options{version};
 
     my $csaf_parser_options = {};
 

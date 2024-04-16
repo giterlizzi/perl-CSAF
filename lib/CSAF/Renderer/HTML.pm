@@ -15,10 +15,11 @@ sub render {
 
     my ($self, %options) = @_;
 
-    my $products       = $CSAF::CACHE->{products} || {};
+    my $products = $CSAF::CACHE->{products} || {};
+
     my $max_base_score = 0;
 
-    $self->csaf->builder->build;
+    $self->csaf->build;
 
     foreach my $vuln ($self->csaf->vulnerabilities->each) {
         foreach my $score ($vuln->scores->each) {
@@ -27,6 +28,8 @@ sub render {
             }
         }
     }
+
+    # TODO  Add option to use custom templates (eg. $renderer->html(template => '/path/my-template.tt'))
 
     my $tt = Template->new(
         INCLUDE_PATH => tt_templates_path,
@@ -51,7 +54,7 @@ sub render {
     my $vars     = $options{vars}     || {};
     my $output   = undef;
 
-    $tt->process("$template.tt2", $vars, \$output) or Carp::croak $tt->error;
+    $tt->process("$template.tt", $vars, \$output) or Carp::croak $tt->error;
 
     return $output;
 

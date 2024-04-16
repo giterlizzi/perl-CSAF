@@ -5,14 +5,14 @@ use strict;
 use warnings;
 use utf8;
 
-use CSAF::Util qw(check_datetime);
+use CSAF::Util qw(parse_datetime);
 
 use Moo;
 extends 'CSAF::Type::Base';
 
 
 has category    => (is => 'rw', required => 1);
-has date        => (is => 'rw', coerce   => \&check_datetime);
+has date        => (is => 'rw', coerce   => \&parse_datetime);
 has details     => (is => 'rw', required => 1);
 has group_ids   => (is => 'rw', default  => sub { [] });
 has product_ids => (is => 'rw', default  => sub { [] });

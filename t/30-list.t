@@ -4,8 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use CSAF::Util qw(JSON);
-
 use CSAF::Util::List;
 
 my $collection = CSAF::Util::List->new(1, 2);
@@ -39,7 +37,5 @@ subtest 'each' => sub {
     is_deeply \@test, [1, 2, 3], 'Test each #2';
 
 };
-
-is(JSON->pretty(0)->encode($collection), '[1,2,3]', 'Test TO_JSON');
 
 done_testing();

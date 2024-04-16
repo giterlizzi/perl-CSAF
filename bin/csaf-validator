@@ -26,7 +26,7 @@ csaf-validator - CSAF Validator
       -f, --file PATH   CSAF document path
           --help        Brief help message
           --man         Full documentation
-          -v            Print version
+      -v, --version     Print version
 
 =head1 DESCRIPTION
 
@@ -40,6 +40,10 @@ C<csaf-validator> CSAF Validator
 
     $ cat csaf-document.json | csaf-validator
     [error] /product_tree/branches/0/branches/0/branches/name: Version Range in Product Version (6.1.31 - mandatory)
+
+=head1 SEE ALSO
+
+L<csaf-rolie>
 
 =head1 AUTHOR
 

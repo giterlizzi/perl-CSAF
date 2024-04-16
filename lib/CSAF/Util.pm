@@ -6,26 +6,35 @@ use warnings;
 use utf8;
 
 use Cpanel::JSON::XS;
-use Time::Piece;
+use Data::Dumper;
 use File::Basename        qw(dirname);
 use File::Spec::Functions qw(catfile);
-use List::Util            qw(first);
+use GnuPG::Handles;
+use GnuPG::Interface;
+use IO::Handle;
+use List::Util qw(first);
+use Time::Piece;
 
 use Exporter 'import';
 
-our @EXPORT_OK = (qw(
+our @EXPORT_OK = (qw[
     schema_cache_path resources_path tt_templates_path
-    check_datetime tracking_id_to_well_filename dumper
-    collect_product_ids file_read JSON product_in_group_exists
-    decode_cvss3_vector_string decode_cvss2_vector_string
-));
+    parse_datetime tracking_id_to_well_filename
+    collect_product_ids file_read file_write product_in_group_exists
+    list_cves gpg_sign gpg_verify log_formatter
+]);
 
-my $PURL_REGEXP = qr{^pkg:[A-Za-z\\.\\-\\+][A-Za-z0-9\\.\\-\\+]*/.+};
-
-sub JSON {
-    Cpanel::JSON::XS->new->utf8->canonical->allow_nonref->allow_unknown->allow_blessed->convert_blessed
-        ->stringify_infnan->escape_slash->allow_dupkeys->pretty;
-}
+my %LOG_LEVELS = (
+    0 => 'EMERGENCY',
+    1 => 'ALERT',
+    2 => 'CRITICAL',
+    3 => 'ERROR',
+    4 => 'WARNING',
+    5 => 'NOTICE',
+    6 => 'INFO',
+    7 => 'DEBUG',
+    8 => 'TRACE',
+);
 
 sub Time::Piece::TO_JSON { shift->datetime }
 
@@ -33,7 +42,20 @@ sub schema_cache_path { catfile(resources_path(),  'cache') }
 sub tt_templates_path { catfile(resources_path(),  'template') }
 sub resources_path    { catfile(dirname(__FILE__), 'resources') }
 
-sub check_datetime {
+sub list_cves {
+
+    my $csaf = shift;
+    my @cves = ();
+
+    $csaf->vulnerabilities->each(sub {
+        push @cves, $_->cve;
+    });
+
+    return wantarray ? @cves : "@cves";
+
+}
+
+sub parse_datetime {
 
     my $datetime = shift;
     return unless $datetime;
@@ -112,18 +134,139 @@ sub product_in_group_exists {
 
 sub file_read {
 
-    my ($file) = @_;
+    my $file = shift;
 
-    my $content = do {
+    if (ref($file) eq 'GLOB') {
+        return do { local $/; <$file> };
+    }
+
+    return do {
         open(my $fh, '<', $file) or Carp::croak qq{Failed to read file: $!};
         local $/ = undef;
         <$fh>;
     };
 
-    return $content;
+}
+
+sub file_write {
+
+    my ($file, $content) = @_;
+
+    my $fh = undef;
+
+    if (ref($file) eq 'GLOB') {
+        $fh = $file;
+    }
+    else {
+        open($fh, '>', $file) or Carp::croak "Can't open file: $!";
+    }
+
+    $fh->autoflush(1);
+
+    print $fh $content;
+    close($fh);
 
 }
 
-sub dumper { Data::Dumper->new([@_])->Indent(1)->Sortkeys(1)->Terse(1)->Useqq(1)->Dump }
+sub gpg_get_result_from_handles {
+
+    my %handle = @_;
+
+    my %result = ();
+    my $error  = undef;
+
+    foreach (qw[stdout stderr logger status]) {
+
+        $result{$_} = do { local $/ = undef; readline $handle{$_} };
+        delete $result{$_} unless $result{$_} && $result{$_} =~ /\S/s;
+
+        if (not close $handle{$_}) {
+            $error ||= "Can't close gnupg $_ handle: $!";
+        }
+
+    }
+
+    Carp::carp $error if $error;
+
+    $result{exit_code} = ($? >> 8);
+
+    return \%result;
+
+}
+
+sub gpg_verify {
+
+    my %args = (signed => undef, file => undef, @_);
+
+    my %handle = (
+        stdin  => IO::Handle->new,
+        stdout => IO::Handle->new,
+        stderr => IO::Handle->new,
+        logger => IO::Handle->new,
+        status => IO::Handle->new
+    );
+
+    local $ENV{LANG} = 'C';
+
+    my $gnupg = GnuPG::Interface->new();
+
+    $gnupg->options->hash_init(meta_interactive => 0);
+
+    my $pid = $gnupg->wrap_call(
+        commands     => ['--verify'],
+        command_args => [$args{signed}, $args{file}],
+        handles      => GnuPG::Handles->new(%handle)
+    );
+    waitpid $pid, 0;
+
+    return gpg_get_result_from_handles(%handle);
+
+}
+
+sub gpg_sign {
+
+    my %args = (passphrase => undef, plaintext => undef, key => undef, recipients => [], @_);
+
+    my %handle = (
+        stdin  => IO::Handle->new,
+        stdout => IO::Handle->new,
+        stderr => IO::Handle->new,
+        logger => IO::Handle->new,
+        status => IO::Handle->new
+    );
+
+    local $ENV{LANG} = 'C';
+
+    my $gnupg = GnuPG::Interface->new();
+
+    $gnupg->options->hash_init(armor => 1, meta_interactive => 0);
+    $gnupg->options->default_key($args{key}) if defined $args{key};
+    $gnupg->options->push_recipients($_) for (@{$args{recipients}});
+
+    $gnupg->passphrase($args{passphrase});
+
+    my $pid = $gnupg->detach_sign(handles => GnuPG::Handles->new(%handle));
+
+    print {$handle{stdin}} ($args{plaintext});
+    close $handle{stdin};
+
+    waitpid $pid, 0;
+
+    return gpg_get_result_from_handles(%handle);
+
+}
+
+sub log_formatter {
+
+    my ($category, $level, $format, @params) = @_;
+
+    @params = map { ref $_ ? Dumper($_) : $_ } @params;
+
+    my $message = sprintf($format, @params);
+    my $now     = Time::Piece->new->datetime;
+
+    return sprintf('[%s] [%s] [%s] [%s] %s', $now, $$, lc($LOG_LEVELS{$level}), $category, $message);
+
+}
 
 1;

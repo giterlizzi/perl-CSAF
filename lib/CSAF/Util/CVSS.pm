@@ -6,7 +6,7 @@ use warnings;
 use utf8;
 
 use Exporter 'import';
-our @EXPORT_OK = (qw(decode_cvss_vector_string));
+our @EXPORT_OK = (qw[decode_cvss_vector_string]);
 
 my $CVSS2_METRIC_LABEL = {
     AV  => 'accessVector',

@@ -1,4 +1,4 @@
-package CSAF::Type::Flag;
+package CSAF::ROLIE::Entries;
 
 use 5.010001;
 use strict;
@@ -6,28 +6,9 @@ use warnings;
 use utf8;
 
 use Moo;
-use CSAF::Util qw(parse_datetime);
+extends 'CSAF::Type::List';
 
-extends 'CSAF::Type::Base';
-
-has label       => (is => 'rw', required => 1);
-has date        => (is => 'rw', coerce   => \&parse_datetime);
-has group_ids   => (is => 'rw', default  => sub { [] });
-has product_ids => (is => 'rw', default  => sub { [] });
-
-sub TO_CSAF {
-
-    my $self = shift;
-
-    my $output = {label => $self->label};
-
-    $output->{date}        = $self->date        if ($self->date);
-    $output->{group_ids}   = $self->group_ids   if ($self->group_ids);
-    $output->{product_ids} = $self->product_ids if ($self->product_ids);
-
-    return $output;
-
-}
+has item_class => (is => 'ro', default => 'CSAF::ROLIE::Entry');
 
 1;
 
@@ -35,33 +16,22 @@ __END__
 
 =head1 NAME
 
-CSAF::Type::Flag
+CSAF::ROLIE::Entries - ROLIE entry collection
 
 =head1 SYNOPSIS
 
-    use CSAF::Type::Flag;
-    my $type = CSAF::Type::Flag->new( );
+    use CSAF::ROLIE::Entries;
+    my $entries = CSAF::ROLIE::Entries->new( );
 
 
 =head1 DESCRIPTION
 
+L<CSAF::ROLIE::Entries> is a collection of L<CSAF::ROLIE::Entry> elements.
 
 
 =head2 METHODS
 
-L<CSAF::Type::Flag> inherits all methods from L<CSAF::Type::Base> and implements the following new ones.
-
-=over
-
-=item $type->date
-
-=item $type->group_ids
-
-=item $type->label
-
-=item $type->product_ids
-
-=back
+L<CSAF::ROLIE::Entries> inherits all methods from L<CSAF::Util::List>.
 
 
 =head1 SUPPORT

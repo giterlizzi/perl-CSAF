@@ -25,6 +25,16 @@ has csaf => (
     required => 1
 );
 
+sub clone {
+
+    my $self  = shift;
+    my $clone = {%$self};
+
+    bless $clone, ref $self;
+    return $clone;
+
+}
+
 1;
 
 __END__
@@ -47,6 +57,18 @@ CSAF base class.
 
     $app->csaf(CSAF->new);
 
+=back
+
+
+=head2 METHODS
+
+=over
+
+=item clone
+
+Clone the object
+
+    my $cloned = $app->clone;
 
 =back
 

@@ -8,25 +8,29 @@ use version;
 
 use CSAF::Util::CWE  qw(get_weakness_name weakness_exists);
 use CSAF::Util::CVSS qw(decode_cvss_vector_string);
-use CSAF::Util       qw(collect_product_ids schema_cache_path product_in_group_exists);
+use CSAF::Util       qw(collect_product_ids product_in_group_exists);
+use CSAF::Schema;
 
 use List::MoreUtils qw(uniq duplicates);
 use List::Util      qw(first);
-use JSON::Validator;
 use URI::PackageURL;
 
 use Moo;
 extends 'CSAF::Validator::Base';
+with 'CSAF::Util::Log';
 
 use constant DEBUG => $ENV{CSAF_DEBUG};
 
-my @TESTS = (
-    '6.1.1',    '6.1.2',    '6.1.3',    '6.1.4',     '6.1.5',     '6.1.6',    '6.1.7',    '6.1.8',
-    '6.1.9',    '6.1.10',   '6.1.11',   '6.1.12',    '6.1.13',    '6.1.14',   '6.1.15',   '6.1.16',
-    '6.1.17',   '6.1.18',   '6.1.19',   '6.1.20',    '6.1.21',    '6.1.22',   '6.1.23',   '6.1.24',
-    '6.1.25',   '6.1.26',   '6.1.27.1', '6.1.27.2',  '6.1.27.3',  '6.1.27.4', '6.1.27.5', '6.1.27.6',
-    '6.1.27.7', '6.1.27.8', '6.1.27.9', '6.1.27.10', '6.1.27.11', '6.1.28',   '6.1.29',   '6.1.30',
-    '6.1.31',   '6.1.32',   '6.1.33',
+has tests => (
+    is      => 'ro',
+    default => sub { [
+        '6.1.1',    '6.1.2',    '6.1.3',    '6.1.4',     '6.1.5',     '6.1.6',    '6.1.7',    '6.1.8',
+        '6.1.9',    '6.1.10',   '6.1.11',   '6.1.12',    '6.1.13',    '6.1.14',   '6.1.15',   '6.1.16',
+        '6.1.17',   '6.1.18',   '6.1.19',   '6.1.20',    '6.1.21',    '6.1.22',   '6.1.23',   '6.1.24',
+        '6.1.25',   '6.1.26',   '6.1.27.1', '6.1.27.2',  '6.1.27.3',  '6.1.27.4', '6.1.27.5', '6.1.27.6',
+        '6.1.27.7', '6.1.27.8', '6.1.27.9', '6.1.27.10', '6.1.27.11', '6.1.28',   '6.1.29',   '6.1.30',
+        '6.1.31',   '6.1.32',   '6.1.33',
+    ] }
 );
 
 my $PURL_REGEX = qr{^pkg:[A-Za-z\\.\\-\\+][A-Za-z0-9\\.\\-\\+]*/.+};
@@ -34,30 +38,6 @@ my $PURL_REGEX = qr{^pkg:[A-Za-z\\.\\-\\+][A-Za-z0-9\\.\\-\\+]*/.+};
 my $SEMVER_REGEXP
     = qr{^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$};
 
-
-sub validate {
-
-    my $self = shift;
-
-    foreach my $test_id (@TESTS) {
-
-        $self->exec_test($test_id);
-
-        if (DEBUG) {
-
-            my $test_messages = scalar @{$self->summary->{$test_id} || []};
-
-            if ($test_messages > 0) {
-                say STDERR sprintf('(E) Mandatory Test %s --> found %s validation error(s)', $test_id, $test_messages);
-            }
-
-        }
-
-    }
-
-    return @{$self->messages};
-
-}
 
 sub TEST_6_1_1 {
 
@@ -494,12 +474,8 @@ sub TEST_6_1_8 {
 
             if (my $cvss3 = $score->cvss_v3) {
 
-                my $jv = JSON::Validator->new;
-
-                $jv->cache_paths([schema_cache_path]);
-                $jv->schema($SCHEMAS->{cvss3});
-
-                my @schema_errors = $jv->validate($cvss3->TO_JSON);
+                my $v             = CSAF::Schema->validator(($cvss3->version eq '3.1' ? 'cvss-v3.1' : 'cvss-v3.0'));
+                my @schema_errors = $v->validate($cvss3->TO_JSON);
 
                 foreach my $schema_error (@schema_errors) {
                     $self->add_message(
@@ -514,12 +490,8 @@ sub TEST_6_1_8 {
 
             if (my $cvss2 = $score->cvss_v2) {
 
-                my $jv = JSON::Validator->new;
-
-                $jv->cache_paths([schema_cache_path]);
-                $jv->schema($SCHEMAS->{cvss2});
-
-                my @schema_errors = $jv->validate($cvss2->TO_JSON);
+                my $v             = CSAF::Schema->validator('cvss-v2.0');
+                my @schema_errors = $v->validate($cvss2->TO_JSON);
 
                 foreach my $schema_error (@schema_errors) {
                     $self->add_message(
@@ -541,7 +513,7 @@ sub TEST_6_1_9 {    # TODO INCOMPLETE
 
     my $self = shift;
 
-    DEBUG and say STDERR '(W) Incomplete Mandatory Test 6.1.9';
+    DEBUG and $self->log->warn('Incomplete Mandatory Test 6.1.9');
 
     my $cvss2_severity = {LOW => [0, 3.9], MEDIUM => [4, 6.9], HIGH => [7, 10]};
     my $cvss3_severity = {LOW => [0, 3.9], MEDIUM => [4, 6.9], HIGH => [7, 8.9], CRITICAL => [9, 10]};
@@ -579,7 +551,7 @@ sub TEST_6_1_10 {    # TODO INCOMPLETE
 
     my $self = shift;
 
-    DEBUG and say STDERR '(W) Incomplete Mandatory Test 6.1.10';
+    DEBUG and $self->log->warn('Incomplete Mandatory Test 6.1.10');
 
     $self->csaf->vulnerabilities->each(sub {
 
@@ -672,7 +644,7 @@ sub TEST_6_1_12 {    # TODO INCOMPLETE
 
     my $self = shift;
 
-    DEBUG and say STDERR '(W) Incomplete Mandatory Test 6.1.12';
+    DEBUG and $self->log->warn('Incomplete Mandatory Test 6.1.12');
 
     my $document_lang        = $self->csaf->document->lang;
     my $document_source_lang = $self->csaf->document->source_lang;
@@ -697,13 +669,13 @@ sub TEST_6_1_12 {    # TODO INCOMPLETE
 
 }
 
-sub TEST_6_1_13 {    # TODO INCOMPLETE
+sub TEST_6_1_13 {
 
     my $self = shift;
 
-    DEBUG and say STDERR '(W) Incomplete Mandatory Test 6.1.13';
-
     # /product_tree/branches[](/branches[])*/product/product_identification_helper/purl
+
+    $self->_TEST_6_1_13_branches($self->csaf->product_tree->branches, "/product_tree/branches");
 
     # /product_tree/full_product_names[]/product_identification_helper/purl
 
@@ -741,6 +713,8 @@ sub TEST_6_1_13 {    # TODO INCOMPLETE
 sub TEST_6_1_14 {
 
     my $self = shift;
+
+    return unless $self->csaf->document->tracking->revision_history->size;
 
     # TODO use semver for non-decimal version
 
@@ -1055,7 +1029,7 @@ sub TEST_6_1_25 {    # TODO INCOMPLETE
 
     my $self = shift;
 
-    DEBUG and say STDERR '(W) Incomplete Mandatory Test 6.1.25';
+    DEBUG and $self->log->warn('Incomplete Mandatory Test 6.1.25');
 
     # /product_tree/branches[](/branches[])*/product/product_identification_helper/hashes[]/file_hashes
 
@@ -1543,8 +1517,17 @@ sub TEST_6_1_29 {
 
             my ($remediation, $remediation_idx) = @_;
 
-            foreach my $product_id (keys %{$product_ids}) {
-                if (!first { $product_id eq $_ } @{$remediation->product_ids}) {
+            if (!@{$remediation->product_ids}) {
+                return $self->add_message(
+                    category => 'mandatory',
+                    path     => "/vulnerabilities/$vuln_idx/remediations/$remediation_idx",
+                    code     => '6.1.29',
+                    message  => 'Remediation without Product Reference'
+                );
+            }
+
+            foreach my $product_id (@{$remediation->product_ids}) {
+                if (!first { $product_id eq $_ } keys %{$product_ids}) {
                     return $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/remediations/$remediation_idx",
@@ -1734,6 +1717,48 @@ sub TEST_6_1_33 {
 
 }
 
+sub _TEST_6_1_13_branches {
+
+    my ($self, $branches, $path) = @_;
+
+    $branches->each(sub {
+
+        my ($branch, $branch_idx) = @_;
+
+        $self->_TEST_6_1_13_branches($branch->branches, "$path/$branch_idx/branches");
+
+        return unless $branch->product;
+        return unless $branch->product->product_identification_helper;
+        return unless $branch->product->product_identification_helper->purl;
+
+        $self->_TEST_6_1_13_check_purl($branch->product->product_identification_helper->purl,
+            "$path/$branch_idx/product");
+
+    });
+
+}
+
+sub _TEST_6_1_13_check_purl {
+
+    my ($self, $purl, $path) = @_;
+
+    my $is_invalid = 0;
+
+    $is_invalid = 1 if $purl !~ /$PURL_REGEX/;
+
+    eval { URI::PackageURL->from_string($purl) };
+
+    if ($@) {
+        $is_invalid = 1 if $@;
+        DEBUG and $self->log->error($@);
+    }
+
+    if ($is_invalid) {
+        $self->add_message(category => 'mandatory', path => $path, code => '6.1.13', message => 'Invalid purl');
+    }
+
+}
+
 sub _TEST_6_1_25_branches {
 
     my ($self, $branches, $path) = @_;
@@ -1826,25 +1851,287 @@ sub _TEST_6_1_31_branches {
     });
 }
 
-sub _TEST_6_1_13_check_purl {
-
-    my ($self, $purl, $path) = @_;
-
-    my $is_invalid = 0;
-
-    $is_invalid = 1 if $purl !~ /$PURL_REGEX/;
-
-    eval { URI::PackageURL->from_string($purl) };
-
-    if ($@) {
-        $is_invalid = 1 if $@;
-        DEBUG and say STDERR "$@";
-    }
-
-    if ($is_invalid) {
-        $self->add_message(category => 'mandatory', path => $path, code => '6.1.13', message => 'Invalid purl');
-    }
-
-}
-
 1;
+
+__END__
+
+=head1 NAME
+
+CSAF::Validator::MandatoryTests
+
+=head1 SYNOPSIS
+
+    use CSAF::Validator::MandatoryTests;
+
+    my $v = CSAF::Validator::MandatoryTests->new( csaf => $csaf );
+
+    $v->exec_test('6.1.5');
+    $v->TEST_6_1_5;
+
+
+=head1 DESCRIPTION
+
+Mandatory tests MUST NOT fail at a valid L<CSAF> document.
+
+    6.1.1 Missing Definition of Product ID
+    6.1.2 Multiple Definition of Product ID
+    6.1.3 Circular Definition of Product ID
+    6.1.4 Missing Definition of Product Group ID
+    6.1.5 Multiple Definition of Product Group ID
+    6.1.6 Contradicting Product Status
+    6.1.7 Multiple Scores with same Version per Product
+    6.1.8 Invalid CVSS
+    6.1.9 Invalid CVSS computation
+    6.1.10 Inconsistent CVSS
+    6.1.11 CWE
+    6.1.12 Language
+    6.1.13 PURL
+    6.1.14 Sorted Revision History
+    6.1.15 Translator
+    6.1.16 Latest Document Version
+    6.1.17 Document Status Draft
+    6.1.18 Released Revision History
+    6.1.19 Revision History Entries for Pre-release Versions
+    6.1.20 Non-draft Document Version
+    6.1.21 Missing Item in Revision History
+    6.1.22 Multiple Definition in Revision History
+    6.1.23 Multiple Use of Same CVE
+    6.1.24 Multiple Definition in Involvements
+    6.1.25 Multiple Use of Same Hash Algorithm
+    6.1.26 Prohibited Document Category Name
+    6.1.27 Profile Tests
+        6.1.27.1 Document Notes
+        6.1.27.2 Document References
+        6.1.27.3 Vulnerabilities
+        6.1.27.4 Product Tree
+        6.1.27.5 Vulnerability Notes
+        6.1.27.6 Product Status
+        6.1.27.7 VEX Product Status
+        6.1.27.8 Vulnerability ID
+        6.1.27.9 Impact Statement
+        6.1.27.10 Action Statement
+        6.1.27.11 Vulnerabilities
+    6.1.28 Translation
+    6.1.29 Remediation without Product Reference
+    6.1.30 Mixed Integer and Semantic Versioning
+    6.1.31 Version Range in Product Version
+    6.1.32 Flag without Product Reference
+    6.1.33 Multiple Flags with VEX Justification Codes per Product
+
+=head2 METHODS
+
+L<CSAF::Validator::MandatoryTests> inherits all methods from L<CSAF::Validator::Base> and implements the following new ones.
+
+=over
+
+=item TEST_6_1_1
+
+Missing Definition of Product ID
+
+=item TEST_6_1_2
+
+Multiple Definition of Product ID
+
+=item TEST_6_1_3
+
+Circular Definition of Product ID
+
+=item TEST_6_1_4
+
+Missing Definition of Product Group ID
+
+=item TEST_6_1_5
+
+Multiple Definition of Product Group ID
+
+=item TEST_6_1_6
+
+Contradicting Product Status
+
+=item TEST_6_1_7
+
+Multiple Scores with same Version per Product
+
+=item TEST_6_1_8
+
+Invalid CVSS
+
+=item TEST_6_1_9
+
+Invalid CVSS computation
+
+=item TEST_6_1_10
+
+Inconsistent CVSS
+
+=item TEST_6_1_11
+
+CWE
+
+=item TEST_6_1_12
+
+Language
+
+=item TEST_6_1_13
+
+PURL
+
+=item TEST_6_1_14
+
+Sorted Revision History
+
+=item TEST_6_1_15
+
+Translator
+
+=item TEST_6_1_16
+
+Latest Document Version
+
+=item TEST_6_1_17
+
+Document Status Draft
+
+=item TEST_6_1_18
+
+Released Revision History
+
+=item TEST_6_1_19
+
+Revision History Entries for Pre-release Versions
+
+=item TEST_6_1_20
+
+Non-draft Document Version
+
+=item TEST_6_1_21
+
+Missing Item in Revision History
+
+=item TEST_6_1_22
+
+Multiple Definition in Revision History
+
+=item TEST_6_1_23
+
+Multiple Use of Same CVE
+
+=item TEST_6_1_24
+
+Multiple Definition in Involvements
+
+=item TEST_6_1_25
+
+Multiple Use of Same Hash Algorithm
+
+=item TEST_6_1_26
+
+Prohibited Document Category Name
+
+=item TEST_6_1_27_1
+
+Profile Test - Document Notes
+
+=item TEST_6_1_27_2
+
+Profile Test - Document References
+
+=item TEST_6_1_27_3
+
+Profile Test - Vulnerabilities
+
+=item TEST_6_1_27_4
+
+Profile Test - Product Tree
+
+=item TEST_6_1_27_5
+
+Profile Test - Vulnerability Notes
+
+=item TEST_6_1_27_6
+
+Profile Test - Product Status
+
+=item TEST_6_1_27_7
+
+Profile Test - VEX Product Status
+
+=item TEST_6_1_27_8
+
+Profile Test - Vulnerability ID
+
+=item TEST_6_1_27_9
+
+Profile Test - Impact Statement
+
+=item TEST_6_1_27_10
+
+Profile Test - Action Statement
+
+=item TEST_6_1_27_11
+
+Profile Test - Vulnerabilities
+
+=item TEST_6_1_28
+
+Translation
+
+=item TEST_6_1_29
+
+Remediation without Product Reference
+
+=item TEST_6_1_30
+
+Mixed Integer and Semantic Versioning
+
+=item TEST_6_1_31
+
+Version Range in Product Version
+
+=item TEST_6_1_32
+
+Flag without Product Reference
+
+=item TEST_6_1_33
+
+Multiple Flags with VEX Justification Codes per Product
+
+
+=back
+
+
+=head1 SUPPORT
+
+=head2 Bugs / Feature Requests
+
+Please report any bugs or feature requests through the issue tracker
+at L<https://github.com/giterlizzi/perl-CSAF/issues>.
+You will be notified automatically of any progress on your issue.
+
+=head2 Source Code
+
+This is open source software.  The code repository is available for
+public review and contribution under the terms of the license.
+
+L<https://github.com/giterlizzi/perl-CSAF>
+
+    git clone https://github.com/giterlizzi/perl-CSAF.git
+
+
+=head1 AUTHOR
+
+=over 4
+
+=item * Giuseppe Di Terlizzi <gdt@cpan.org>
+
+=back
+
+
+=head1 LICENSE AND COPYRIGHT
+
+This software is copyright (c) 2023-2024 by Giuseppe Di Terlizzi.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

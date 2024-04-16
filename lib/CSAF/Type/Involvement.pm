@@ -6,12 +6,12 @@ use warnings;
 use utf8;
 
 use Moo;
-use CSAF::Util qw(check_datetime);
+use CSAF::Util qw(parse_datetime);
 
 extends 'CSAF::Type::Base';
 
 
-has date    => (is => 'rw', coerce   => \&check_datetime);
+has date    => (is => 'rw', coerce   => \&parse_datetime);
 has party   => (is => 'rw', required => 1,);
 has status  => (is => 'rw', required => 1);
 has summary => (is => 'rw');

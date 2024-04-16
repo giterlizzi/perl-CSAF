@@ -22,14 +22,19 @@ WriteMakefile(
         'File::Basename'        => '0',    # CORE
         'File::Path'            => '0',    # CORE
         'File::Spec::Functions' => '0',    # CORE
+        'GnuPG::Interface'      => '0',
+        'LWP::UserAgent'        => '0',
         'JSON::Validator'       => '0',
         'List::MoreUtils'       => '0',
         'List::Util'            => '0',    # CORE
+        'Log::Any'              => '0',
         'Moo'                   => '0',
+        'Parallel::ForkManager' => '0',
+        'Template'              => '0',
         'Tie::File'             => '0',    # CORE
         'Time::Piece'           => '0',    # CORE
         'URI::PackageURL'       => '0',
-        'Template'              => '0',
+        'YAML::XS'              => '0',
     },
     META_MERGE => {
         'meta-spec' => {version => 2},

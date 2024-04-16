@@ -6,7 +6,7 @@ use warnings;
 use utf8;
 
 use Exporter 'import';
-our @EXPORT_OK = (qw(get_weakness_name weakness_exists));
+our @EXPORT_OK = (qw[get_weakness_name weakness_exists]);
 
 use constant WEAKNESSES => (
     'CWE-5'  => q"J2EE Misconfiguration: Data Transmission Without Encryption",

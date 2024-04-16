@@ -91,3 +91,105 @@ sub _build {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+CSAF::Type - Wrapper for all CSAF document types
+
+=head1 SYNOPSIS
+
+    use CSAF::Type;
+
+    CSAF::Type->name(
+        reference => {
+            url      => 'https://www.cve.org/CVERecord?id=CVE-2022-43634',
+            summary  => 'CVE-2022-43634',
+            category => 'external'
+        }
+    );
+
+
+    CSAF::Type->new(
+        name  => 'reference',
+        value => {
+            url      => 'https://www.cve.org/CVERecord?id=CVE-2022-43634',
+            summary  => 'CVE-2022-43634',
+            category => 'external'
+        }
+    );
+
+
+
+=head1 DESCRIPTION
+
+
+
+=head2 METHODS
+
+=over
+
+=item new ( name => $name, value => $value )
+
+Load and return the B<CSAF::Type::*> class provided in B<name>.
+
+    CSAF::Type->new(
+        name  => 'reference',
+        value => {
+            url      => 'https://www.cve.org/CVERecord?id=CVE-2022-43634',
+            summary  => 'CVE-2022-43634',
+            category => 'external'
+        }
+    );
+
+=item name ( $type => $value )
+
+Load and return the B<CSAF::Type::*> class.
+
+    CSAF::Type->name(
+        reference => {
+            url      => 'https://www.cve.org/CVERecord?id=CVE-2022-43634',
+            summary  => 'CVE-2022-43634',
+            category => 'external'
+        }
+    );
+
+
+=back
+
+=head1 SUPPORT
+
+=head2 Bugs / Feature Requests
+
+Please report any bugs or feature requests through the issue tracker
+at L<https://github.com/giterlizzi/perl-CSAF/issues>.
+You will be notified automatically of any progress on your issue.
+
+=head2 Source Code
+
+This is open source software.  The code repository is available for
+public review and contribution under the terms of the license.
+
+L<https://github.com/giterlizzi/perl-CSAF>
+
+    git clone https://github.com/giterlizzi/perl-CSAF.git
+
+
+=head1 AUTHOR
+
+=over 4
+
+=item * Giuseppe Di Terlizzi <gdt@cpan.org>
+
+=back
+
+
+=head1 LICENSE AND COPYRIGHT
+
+This software is copyright (c) 2023-2024 by Giuseppe Di Terlizzi.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

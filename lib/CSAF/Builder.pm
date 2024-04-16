@@ -6,7 +6,6 @@ use warnings;
 use utf8;
 
 use Carp;
-
 use CSAF::Validator;
 
 use Moo;
@@ -30,21 +29,8 @@ sub build {
         $csaf->{product_tree} = $product_tree;
     }
 
-    my @errors = ();
-
     unless ($skip_validation) {
-
-        my $v        = $self->csaf->validator;
-        my @messages = $v->validate;
-
-        if (@messages && $v->has_error) {
-            Carp::croak 'CSAF Document validation error(s)';
-        }
-
-        if (@messages && $v->has_warning) {
-            Carp::carp 'CSAF Document validation warning(s)';
-        }
-
+        $self->csaf->validator->validate;
     }
 
     return $csaf;

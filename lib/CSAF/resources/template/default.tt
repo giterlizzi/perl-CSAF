@@ -1,5 +1,5 @@
 
-[% # CSAF Document Template based on secvisogram template
+[% # CSAF Document Template (based on secvisogram template)
    # https://github.com/secvisogram/secvisogram/blob/main/app/lib/app/SecvisogramPage/View/shared/HTMLTemplate/Template.html
    # %]
 
@@ -149,6 +149,7 @@
 <html lang="en">
 
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://unpkg.com/gutenberg-css" charset="utf-8">
   <link rel="stylesheet" href="https://unpkg.com/gutenberg-css/dist/themes/modern.min.css" charset="utf-8">
   <meta charset="utf-8" />
@@ -168,6 +169,8 @@
     .tlp-amber { color: #ffc000; }
     .tlp-red   { color: #FF2B2B; }
   </style>
+
+  <title>[% IF document.tracking.id %][% document.tracking.id %]: [% END %] [% document.title %]</title>
 </head>
 
 <body>

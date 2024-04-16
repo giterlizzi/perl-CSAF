@@ -8,8 +8,6 @@ use utf8;
 use Moo;
 extends 'CSAF::Type::List';
 
-our $ITEM_CLASS_NAME = 'CSAF::Type::FileHash';
-
 has item_class => (is => 'ro', default => 'CSAF::Type::FileHash');
 
 1;

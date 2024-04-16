@@ -5,17 +5,20 @@ use strict;
 use warnings;
 use utf8;
 
-use CSAF::Util qw(JSON);
+use Cpanel::JSON::XS;
 
 use Moo;
 extends 'CSAF::Renderer::Base';
 
 sub render {
 
-    my $csaf = shift->csaf->builder->build;
-    my $json = JSON->encode($csaf);
+    my $json = Cpanel::JSON::XS->new->utf8->canonical->allow_nonref->allow_unknown->allow_blessed->convert_blessed
+        ->stringify_infnan->escape_slash(0)->allow_dupkeys->pretty;
 
-    return $json;
+    my $csaf        = shift->csaf->build;
+    my $json_string = $json->encode($csaf);
+
+    return $json_string;
 
 }
 

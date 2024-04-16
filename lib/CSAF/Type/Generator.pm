@@ -6,12 +6,12 @@ use warnings;
 use utf8;
 
 use Moo;
-use CSAF::Util qw(check_datetime);
+use CSAF::Util qw(parse_datetime);
 use CSAF::Type::Engine;
 
 extends 'CSAF::Type::Base';
 
-has date => (is => 'rw', predicate => 1, coerce => \&check_datetime);
+has date => (is => 'rw', predicate => 1, coerce => \&parse_datetime);
 
 sub engine {
     my ($self, %params) = @_;

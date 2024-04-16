@@ -6,24 +6,32 @@ use warnings;
 use utf8;
 
 use CSAF::Builder;
-use CSAF::Writer;
-use CSAF::Validator;
+use CSAF::Parser;
 use CSAF::Renderer;
+use CSAF::Validator;
+use CSAF::Writer;
 
 use CSAF::Document;
 
 use overload '""' => \&to_string, fallback => 1;
 
-our $VERSION = '0.13';
+use Moo;
+
+our $VERSION = '0.20';
 
 our $CACHE = {};
 
-sub new {
+sub BUILD {
 
-    my $class = shift;
-    my $self  = {_ => CSAF::Document->new};
+    my ($self, $args) = @_;
 
-    return bless $self, $class;
+    $self->{_} = CSAF::Document->new;
+
+    $CACHE = {};
+
+    $self->{builder}   = CSAF::Builder->new(csaf => $self);
+    $self->{renderer}  = CSAF::Renderer->new(csaf => $self);
+    $self->{validator} = CSAF::Validator->new(csaf => $self);
 
 }
 
@@ -35,22 +43,23 @@ sub vulnerabilities { shift->{_}->vulnerabilities }
 
 # Helper classes
 
-sub builder   { CSAF::Builder->new(csaf => shift) }
-sub renderer  { CSAF::Renderer->new(csaf => shift) }
-sub validator { CSAF::Validator->new(csaf => shift) }
+sub builder   { shift->{builder} }
+sub renderer  { shift->{renderer} }
+sub validator { shift->{validator} }
 sub writer    { CSAF::Writer->new(csaf => shift, @_) }
 
 # Helpers
 
-sub validate { shift->validator->validate }
+sub build    { shift->builder->build }
+sub validate { shift->validator->validate(@_) }
 sub render   { shift->renderer->render(@_) }
+
+sub from_string { CSAF::Parser->new(content => $_[1])->parse }
+sub from_file   { CSAF::Parser->new(file    => $_[1])->parse }
+sub from_hash   { CSAF::Parser->new(data    => $_[1])->parse }
 
 sub to_string { shift->renderer->render }
 sub TO_JSON   { shift->builder->TO_JSON }
-
-sub DESTROY {
-    $CACHE = {};    # Reset Cache
-}
 
 1;
 
@@ -95,6 +104,7 @@ CSAF - Common Security Advisory Framework
         Carp::croak "Validation errors";
     }
 
+    # Save CSAF documents using the 
     $csaf->writer(directory => '/var/www/html/csaf')->write;
 
 
@@ -157,6 +167,14 @@ Alias for C<validator-E<gt>validate>.
 =item validator
 
 Return L<CSAF::Validator>.
+
+=item from_string
+
+Parse CSAF document string and return L<CSAF>.
+
+=item from_file
+
+Parse CSAF document file and return L<CSAF>.
 
 =item to_string
 

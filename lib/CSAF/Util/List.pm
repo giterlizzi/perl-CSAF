@@ -43,11 +43,6 @@ sub map {
     return $self->new(map { $_->$callback(@_) } @{$self->items});
 }
 
-sub tap {
-    my ($self, $callback) = @_;
-    $_->$callback(@_) for (@{$self->items});
-    return $self;
-}
 
 sub to_array { [@{shift->items}] }
 

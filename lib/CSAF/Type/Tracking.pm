@@ -9,11 +9,11 @@ use version;
 use Moo;
 use CSAF::Type::Generator;
 use CSAF::Type::RevisionHistory;
-use CSAF::Util qw(check_datetime);
+use CSAF::Util qw(parse_datetime);
 
 extends 'CSAF::Type::Base';
 
-has ['current_release_date', 'initial_release_date'] => (is => 'rw', required => 1, coerce => \&check_datetime);
+has ['current_release_date', 'initial_release_date'] => (is => 'rw', required => 1, coerce => \&parse_datetime);
 
 has ['id', 'status'] => (is => 'rw', required => 1);
 

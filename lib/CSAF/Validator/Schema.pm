@@ -5,9 +5,8 @@ use strict;
 use warnings;
 use utf8;
 
-use CSAF::Util qw(schema_cache_path);
+use CSAF::Schema;
 use CSAF::Builder;
-use JSON::Validator;
 
 use Moo;
 extends 'CSAF::Validator::Base';
@@ -16,12 +15,10 @@ sub validate {
 
     my ($self) = @_;
 
-    my $jv = JSON::Validator->new;
+    # 9.1.14 Conformance Clause 14: CSAF basic validator
 
-    $jv->cache_paths([schema_cache_path]);
-    $jv->schema('https://docs.oasis-open.org/csaf/csaf/v2.0/os/schemas/csaf_json_schema.json');
-
-    my @errors = $jv->validate(CSAF::Builder->new(shift->csaf)->build(1));
+    my $schema = CSAF::Schema->validator('csaf-2.0');
+    my @errors = $schema->validate(CSAF::Builder->new(shift->csaf)->build(1));
 
     foreach my $error (@errors) {
         $self->add_message(category => 'schema', message => $error->message, path => $error->path, code => '9.1.14');
