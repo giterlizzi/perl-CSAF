@@ -13,11 +13,10 @@ use constant FALSE => !!0;
 
 has csaf_directory => (is => 'rw');
 has base_url       => (is => 'rw', trigger => 1, default => 'https://psirt.domain.tld/advisories/csaf');
-has feed_filename  => (is => 'rw');
+has feed_filename  => (is => 'rw', default => 'csaf-feed-tlp-white.json');
 has feed_id        => (is => 'rw', trigger => 1, default => 'csaf-feed-tlp-white');
 has feed_link      => (is => 'rw', default => sub { [] });
 has feed_title     => (is => 'rw', default => 'CSAF feed (TLP:WHITE)');
-has feed_url       => (is => 'lazy');
 has tlp_label      => (is => 'rw', trigger => 1, default => 'WHITE', coerce => sub { uc $_[0] });
 
 sub _trigger_base_url {
@@ -43,7 +42,7 @@ sub _trigger_feed_id {
 
 }
 
-sub _build_feed_url {
+sub feed_url {
     my $self = shift;
     return join('/', $self->base_url, $self->feed_filename);
 }
