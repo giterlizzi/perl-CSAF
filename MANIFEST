@@ -21,8 +21,11 @@ lib/CSAF/Renderer.pm
 lib/CSAF/Renderer/Base.pm
 lib/CSAF/Renderer/HTML.pm
 lib/CSAF/Renderer/JSON.pm
+lib/CSAF/resources/cache/09c932cd025cb0f5110be89389cfe6fc
+lib/CSAF/resources/cache/310db979ce6c3fb104849a8943c46392
 lib/CSAF/resources/cache/6616ab5b335e47cd27e701999bd8eb3a
 lib/CSAF/resources/cache/803157887dabfefc7425634a877ed27a
+lib/CSAF/resources/cache/9653b500aa11f9eec08e6722af41cac7
 lib/CSAF/resources/cache/ac1b12ae2d190a0c468b534b8a1b9bd2
 lib/CSAF/resources/cache/bb7795e241f5997c83fb4fc8fa278368
 lib/CSAF/resources/cache/efea8b3a7512905f5aa6affa56ea3a68
@@ -139,7 +142,6 @@ t/10-optional-6.2.4.t
 t/20-parser.t
 t/30-list.t
 t/40-type.t
-t/50-render.t
 t/90-official-testcases.t
 t/examples/bsi-2022-0001.json
 t/examples/cisco-sa-20180328-smi2.json
