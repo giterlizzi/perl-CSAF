@@ -7,6 +7,39 @@
 ```.pl
 use CSAF;
 
+my $csaf = CSAF->new;
+
+$csaf->document->title('Base CSAF Document');
+$csaf->document->category('csaf_security_advisory');
+$csaf->document->publisher(
+    category  => 'vendor',
+    name      => 'CSAF',
+    namespace => 'https://csaf.io'
+);
+
+my $tracking = $csaf->document->tracking(
+    id                   => 'CSAF:2024-001',
+    status               => 'final',
+    version              => '1.0.0',
+    initial_release_date => 'now',
+    current_release_date => 'now'
+);
+
+$tracking->revision_history->add(
+    date    => 'now',
+    summary => 'First release',
+    number  => '1'
+);
+
+my @errors = $csaf->validate;
+
+if (@errors) {
+    say $_ for (@errors);
+    Carp::croak "Validation errors";
+}
+
+# Save CSAF documents using the 
+$csaf->writer(directory => '/var/www/html/csaf')->write;
 ```
 
 ## Install
