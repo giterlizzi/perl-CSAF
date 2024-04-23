@@ -11,8 +11,10 @@ use CSAF::Type::Product;
 
 extends 'CSAF::Type::Base';
 
-has [qw(category name)] => (is => 'rw', required => 1);
+has category => (is => 'rw', required => 1);
+has name => (is => 'rw', required => 1, coerce => sub { ref($_[0]) eq 'URI::VersionRange' ? $_[0]->to_string : $_[0] });
 has product => (is => 'rw', predicate => 1, coerce => sub { CSAF::Type::Product->new(shift) });
+
 
 sub branches {
     my $self = shift;
