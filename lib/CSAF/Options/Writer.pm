@@ -25,6 +25,8 @@ has gpg_key        => (is => 'rw');
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Options::Writer - CSAF::Writer configurator

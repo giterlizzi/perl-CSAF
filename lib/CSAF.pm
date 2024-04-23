@@ -17,7 +17,7 @@ use overload '""' => \&to_string, fallback => 1;
 
 use Moo;
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 our $CACHE = {};
 
@@ -64,6 +64,8 @@ sub TO_JSON   { shift->builder->TO_JSON }
 1;
 
 __END__
+
+=encoding utf-8
 
 =head1 NAME
 
@@ -120,6 +122,8 @@ L<https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html>
 
 
 =head2 CSAF PROPERTIES
+
+These properties are inherited from L<CSAF::Document>.
 
 =over
 

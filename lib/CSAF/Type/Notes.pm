@@ -28,6 +28,8 @@ sub get_category {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Type::Notes

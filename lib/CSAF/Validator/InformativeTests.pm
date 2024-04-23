@@ -277,6 +277,8 @@ sub _TEST_6_3_11_branches {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Validator::InformativeTests

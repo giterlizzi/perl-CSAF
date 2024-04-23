@@ -94,6 +94,8 @@ sub _build {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Type - Wrapper for all CSAF document types

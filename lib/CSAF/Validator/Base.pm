@@ -58,6 +58,8 @@ sub exec_test {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Validator::Base - Base class for CSAF validation

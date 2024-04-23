@@ -62,6 +62,8 @@ sub validate {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Validator - Conformance Validator
@@ -104,6 +106,8 @@ L<https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html>
 =head2 METHODS
 
 L<CSAF::Validator> inherits all methods from L<CSAF::Validator::Base> and implements the following new ones.
+
+=over
 
 =item validate ( [$type] )
 

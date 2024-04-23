@@ -39,6 +39,8 @@ has insecure => (is => 'rw', default => FALSE);
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Options::Downloader - CSAF::Downloader configurator

@@ -18,6 +18,8 @@ sub render { Carp::croak 'Method "render" not implemented by subclass' }
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Renderer::Base - Renderer base class

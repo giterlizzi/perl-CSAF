@@ -1855,6 +1855,8 @@ sub _TEST_6_1_31_branches {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Validator::MandatoryTests

@@ -714,6 +714,8 @@ sub _TEST_6_2_16_walk_branches {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Validator::OptionalTests

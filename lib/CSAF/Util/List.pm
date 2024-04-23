@@ -59,6 +59,8 @@ sub TO_JSON { [@{shift->items}] }
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Util::List - (Mojo like) collection utility

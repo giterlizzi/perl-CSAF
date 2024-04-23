@@ -33,6 +33,8 @@ sub TO_CSAF {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Type::Distribution

@@ -14,6 +14,8 @@ has item_class => (is => 'ro', default => 'CSAF::ROLIE::Entry');
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::ROLIE::Entries - ROLIE entry collection

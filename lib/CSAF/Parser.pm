@@ -208,6 +208,8 @@ sub _branches_walk {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Parser - Parse a CSAF document

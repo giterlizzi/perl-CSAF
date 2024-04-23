@@ -51,6 +51,8 @@ sub feed_url {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Options::ROLIE - CSAF::ROLIE::Feed configurator

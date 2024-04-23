@@ -126,6 +126,8 @@ sub write {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Writer - Write and distributes CSAF documents

@@ -284,6 +284,8 @@ sub TO_JSON {
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::ROLIE::Feed - Build ROLIE (Resource-Oriented Lightweight Information Exchange) feed

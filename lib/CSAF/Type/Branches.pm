@@ -14,6 +14,8 @@ has item_class => (is => 'ro', default => 'CSAF::Type::Branch');
 
 __END__
 
+=encoding utf-8
+
 =head1 NAME
 
 CSAF::Type::Branches
