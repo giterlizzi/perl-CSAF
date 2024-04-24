@@ -351,7 +351,7 @@ __END__
 
 =head1 NAME
 
-CSAF::Downloader - Download CAF document
+CSAF::Downloader - Download CSAF documents
 
 =head1 SYNOPSIS
 

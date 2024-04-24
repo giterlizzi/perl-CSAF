@@ -29,7 +29,7 @@ csaf-downloader - CSAF Downloader
           --parallel-downloads=NUM  Number of parallel downloads (default: 10)
 
           --validate=[type]         Validate CSAF document (type: schema, mandatory, optional, informative)
-          --signature-check         Enable GPG signature chec
+          --signature-check         Enable GPG signature check
           --integrity-check         Enable SHA-(256|512) integrity check
 
           --include=REGEXP          Include file
