@@ -17,7 +17,7 @@ use overload '""' => \&to_string, fallback => 1;
 
 use Moo;
 
-our $VERSION = '0.22';
+our $VERSION = '0.22_01';
 
 our $CACHE = {};
 
