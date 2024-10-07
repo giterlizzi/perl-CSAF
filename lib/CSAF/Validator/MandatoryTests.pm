@@ -524,39 +524,64 @@ sub TEST_6_1_9 {
 
             if (my $cvss2 = $score->cvss_v2) {
 
+                #   /vulnerabilities[]/scores[]/cvss_v2/baseScore
+                #   /vulnerabilities[]/scores[]/cvss_v2/temporalScore
+                #   /vulnerabilities[]/scores[]/cvss_v2/environmentalScore
+
                 my $cvss = CVSS->from_vector_string($cvss2->vectorString);
 
-                if ($cvss2->baseScore && $cvss->baseScore ne $cvss2->baseScore) {
-                    $self->add_message(
-                        category => 'mandatory',
-                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v2",
-                        code     => '6.1.9',
-                        message  => 'Invalid CVSS computation'
-                    );
+                my @scores = (qw[
+                    baseScore
+                    temporalScore
+                    environmentalScore
+                ]);
+
+                foreach my $score (@scores) {
+
+                    if ($cvss2->$score && $cvss->$score ne $cvss2->$score) {
+                        $self->add_message(
+                            category => 'mandatory',
+                            path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v2",
+                            code     => '6.1.9',
+                            message  => 'Invalid CVSS computation'
+                        );
+                    }
+
                 }
 
             }
 
             if (my $cvss3 = $score->cvss_v3) {
 
+                #   /vulnerabilities[]/scores[]/cvss_v3/baseScore
+                #   /vulnerabilities[]/scores[]/cvss_v3/baseSeverity
+                #   /vulnerabilities[]/scores[]/cvss_v3/temporalScore
+                #   /vulnerabilities[]/scores[]/cvss_v3/temporalSeverity
+                #   /vulnerabilities[]/scores[]/cvss_v3/environmentalScore
+                #   /vulnerabilities[]/scores[]/cvss_v3/environmentalSeverity
+
                 my $cvss = CVSS->from_vector_string($cvss3->vectorString);
 
-                if ($cvss3->baseSeverity && $cvss->baseSeverity ne $cvss3->baseSeverity) {
-                    $self->add_message(
-                        category => 'mandatory',
-                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
-                        code     => '6.1.9',
-                        message  => 'Invalid CVSS computation'
-                    );
-                }
+                my @scores = (qw[
+                    baseScore
+                    baseSeverity
+                    temporalScore
+                    temporalSeverity
+                    environmentalScore
+                    environmentalSeverity
+                ]);
 
-                if ($cvss3->baseScore && $cvss->baseScore ne $cvss3->baseScore) {
-                    $self->add_message(
-                        category => 'mandatory',
-                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
-                        code     => '6.1.9',
-                        message  => 'Invalid CVSS computation'
-                    );
+                foreach my $score (@scores) {
+
+                    if ($cvss3->$score && $cvss->$score ne $cvss3->$score) {
+                        $self->add_message(
+                            category => 'mandatory',
+                            path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
+                            code     => '6.1.9',
+                            message  => 'Invalid CVSS computation'
+                        );
+                    }
+
                 }
 
             }
