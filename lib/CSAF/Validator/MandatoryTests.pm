@@ -11,6 +11,7 @@ use CSAF::Util::CVSS qw(decode_cvss_vector_string);
 use CSAF::Util       qw(collect_product_ids product_in_group_exists);
 use CSAF::Schema;
 
+use CVSS;
 use List::MoreUtils qw(uniq duplicates);
 use List::Util      qw(first);
 use URI::PackageURL;
@@ -509,14 +510,9 @@ sub TEST_6_1_8 {
 
 }
 
-sub TEST_6_1_9 {    # TODO INCOMPLETE
+sub TEST_6_1_9 {
 
     my $self = shift;
-
-    DEBUG and $self->log->warn('Incomplete Mandatory Test 6.1.9');
-
-    my $cvss2_severity = {LOW => [0, 3.9], MEDIUM => [4, 6.9], HIGH => [7, 10]};
-    my $cvss3_severity = {LOW => [0, 3.9], MEDIUM => [4, 6.9], HIGH => [7, 8.9], CRITICAL => [9, 10]};
 
     $self->csaf->vulnerabilities->each(sub {
 
@@ -526,13 +522,35 @@ sub TEST_6_1_9 {    # TODO INCOMPLETE
 
             my ($score, $score_idx) = @_;
 
+            if (my $cvss2 = $score->cvss_v2) {
+
+                my $cvss = CVSS->from_vector_string($cvss2->vectorString);
+
+                if ($cvss2->baseScore && $cvss->baseScore ne $cvss2->baseScore) {
+                    $self->add_message(
+                        category => 'mandatory',
+                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v2",
+                        code     => '6.1.9',
+                        message  => 'Invalid CVSS computation'
+                    );
+                }
+
+            }
+
             if (my $cvss3 = $score->cvss_v3) {
 
-                return if (!$cvss3->baseSeverity);
+                my $cvss = CVSS->from_vector_string($cvss3->vectorString);
 
-                my ($score_min, $score_max) = @{$cvss3_severity->{$cvss3->baseSeverity}};
+                if ($cvss3->baseSeverity && $cvss->baseSeverity ne $cvss3->baseSeverity) {
+                    $self->add_message(
+                        category => 'mandatory',
+                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
+                        code     => '6.1.9',
+                        message  => 'Invalid CVSS computation'
+                    );
+                }
 
-                unless ($cvss3->baseScore >= $score_min && $cvss3->baseScore <= $score_max) {
+                if ($cvss3->baseScore && $cvss->baseScore ne $cvss3->baseScore) {
                     $self->add_message(
                         category => 'mandatory',
                         path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",

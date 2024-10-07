@@ -51,5 +51,10 @@ $vuln->scores->add(
         {baseScore => 10.0, baseSeverity => 'LOW', vectorString => 'CVSS:3.1/AV:L/AC:L/PR:H/UI:R/S:U/C:H/I:H/A:H'}
 );
 
+$vuln->scores->add(
+    products => ['CSAFPID-9080700'],
+    cvss_v2  => {baseScore => 10.0, vectorString => 'AV:N/AC:L/Au:N/C:C/I:C/A:C'}
+);
+
 exec_validator_mandatory_test($csaf, '6.1.9');
 done_testing;
