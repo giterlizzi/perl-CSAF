@@ -35,6 +35,7 @@ WriteMakefile(
         'Time::Piece'           => '0',    # CORE
         'URI::PackageURL'       => '0',
         'YAML::XS'              => '0',
+        'CVSS'                  => '0',
     },
     META_MERGE => {
         'meta-spec' => {version => 2},
