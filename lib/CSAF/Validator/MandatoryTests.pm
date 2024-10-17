@@ -6,12 +6,14 @@ use warnings;
 use utf8;
 use version;
 
-use CSAF::Util::CWE  qw(get_weakness_name weakness_exists);
-use CSAF::Util::CVSS qw(decode_cvss_vector_string);
-use CSAF::Util       qw(collect_product_ids product_in_group_exists);
+use CSAF::Util::CWE qw(get_weakness_name weakness_exists);
+use CSAF::Util      qw(collect_product_ids product_in_group_exists);
 use CSAF::Schema;
 
 use CVSS;
+use CVSS::v2;
+use CVSS::v3;
+
 use List::MoreUtils qw(uniq duplicates);
 use List::Util      qw(first);
 use URI::PackageURL;
@@ -473,10 +475,10 @@ sub TEST_6_1_8 {
 
             my ($score, $score_idx) = @_;
 
-            if (my $cvss3 = $score->cvss_v3) {
+            if (my $cvss_v3 = $score->cvss_v3) {
 
-                my $v             = CSAF::Schema->validator(($cvss3->version eq '3.1' ? 'cvss-v3.1' : 'cvss-v3.0'));
-                my @schema_errors = $v->validate($cvss3->TO_JSON);
+                my $v             = CSAF::Schema->validator(($cvss_v3->version eq '3.1' ? 'cvss-v3.1' : 'cvss-v3.0'));
+                my @schema_errors = $v->validate($cvss_v3->TO_JSON);
 
                 foreach my $schema_error (@schema_errors) {
                     $self->add_message(
@@ -489,10 +491,10 @@ sub TEST_6_1_8 {
 
             }
 
-            if (my $cvss2 = $score->cvss_v2) {
+            if (my $cvss_v2 = $score->cvss_v2) {
 
                 my $v             = CSAF::Schema->validator('cvss-v2.0');
-                my @schema_errors = $v->validate($cvss2->TO_JSON);
+                my @schema_errors = $v->validate($cvss_v2->TO_JSON);
 
                 foreach my $schema_error (@schema_errors) {
                     $self->add_message(
@@ -522,41 +524,66 @@ sub TEST_6_1_9 {
 
             my ($score, $score_idx) = @_;
 
-            if (my $cvss2 = $score->cvss_v2) {
+            if (my $cvss_v2 = $score->cvss_v2) {
 
-                my $cvss = CVSS->from_vector_string($cvss2->vectorString);
+                #   /vulnerabilities[]/scores[]/cvss_v2/baseScore
+                #   /vulnerabilities[]/scores[]/cvss_v2/temporalScore
+                #   /vulnerabilities[]/scores[]/cvss_v2/environmentalScore
 
-                if ($cvss2->baseScore && $cvss->baseScore ne $cvss2->baseScore) {
-                    $self->add_message(
-                        category => 'mandatory',
-                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v2",
-                        code     => '6.1.9',
-                        message  => 'Invalid CVSS computation'
-                    );
+                my $cvss = CVSS->from_vector_string($cvss_v2->vectorString);
+
+                my @scores = (qw[
+                    baseScore
+                    temporalScore
+                    environmentalScore
+                ]);
+
+                foreach my $score (@scores) {
+
+                    if ($cvss_v2->$score && $cvss->$score ne $cvss_v2->$score) {
+                        $self->add_message(
+                            category => 'mandatory',
+                            path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v2",
+                            code     => '6.1.9',
+                            message  => 'Invalid CVSS computation'
+                        );
+                    }
+
                 }
 
             }
 
-            if (my $cvss3 = $score->cvss_v3) {
+            if (my $cvss_v3 = $score->cvss_v3) {
 
-                my $cvss = CVSS->from_vector_string($cvss3->vectorString);
+                #   /vulnerabilities[]/scores[]/cvss_v3/baseScore
+                #   /vulnerabilities[]/scores[]/cvss_v3/baseSeverity
+                #   /vulnerabilities[]/scores[]/cvss_v3/temporalScore
+                #   /vulnerabilities[]/scores[]/cvss_v3/temporalSeverity
+                #   /vulnerabilities[]/scores[]/cvss_v3/environmentalScore
+                #   /vulnerabilities[]/scores[]/cvss_v3/environmentalSeverity
 
-                if ($cvss3->baseSeverity && $cvss->baseSeverity ne $cvss3->baseSeverity) {
-                    $self->add_message(
-                        category => 'mandatory',
-                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
-                        code     => '6.1.9',
-                        message  => 'Invalid CVSS computation'
-                    );
-                }
+                my $cvss = CVSS->from_vector_string($cvss_v3->vectorString);
 
-                if ($cvss3->baseScore && $cvss->baseScore ne $cvss3->baseScore) {
-                    $self->add_message(
-                        category => 'mandatory',
-                        path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
-                        code     => '6.1.9',
-                        message  => 'Invalid CVSS computation'
-                    );
+                my @scores = (qw[
+                    baseScore
+                    baseSeverity
+                    temporalScore
+                    temporalSeverity
+                    environmentalScore
+                    environmentalSeverity
+                ]);
+
+                foreach my $score (@scores) {
+
+                    if ($cvss_v3->$score && $cvss->$score ne $cvss_v3->$score) {
+                        $self->add_message(
+                            category => 'mandatory',
+                            path     => "/vulnerabilities/$vuln_idx/score/$score_idx/cvss_v3",
+                            code     => '6.1.9',
+                            message  => 'Invalid CVSS computation'
+                        );
+                    }
+
                 }
 
             }
@@ -565,11 +592,9 @@ sub TEST_6_1_9 {
     });
 }
 
-sub TEST_6_1_10 {    # TODO INCOMPLETE
+sub TEST_6_1_10 {
 
     my $self = shift;
-
-    DEBUG and $self->log->warn('Incomplete Mandatory Test 6.1.10');
 
     $self->csaf->vulnerabilities->each(sub {
 
@@ -581,28 +606,85 @@ sub TEST_6_1_10 {    # TODO INCOMPLETE
 
             # CVSS 2.0
 
-            if (my $cvss = $score->cvss_v2) {
+            if (my $cvss_v2 = $score->cvss_v2) {
+
+                my $vector_string = $cvss_v2->vectorString;
+                my $cvss          = CVSS->from_vector_string($vector_string);
+
+                return unless $vector_string;
+
+                my @metrics = (qw[
+                    accessVector
+                    accessComplexity
+                    authentication
+                    confidentialityImpact
+                    integrityImpact
+                    availabilityImpact
+                    exploitability
+                    remediationLevel
+                    reportConfidence
+                    collateralDamagePotential
+                    targetDistribution
+                    confidentialityRequirement
+                    integrityRequirement
+                    availabilityRequirement
+                ]);
+
+                foreach my $metric (@metrics) {
+
+                    my $doc_metric_value = $cvss_v2->$metric;
+
+                    if ($doc_metric_value && $doc_metric_value ne $cvss->$metric) {
+                        $self->add_message(
+                            category => 'mandatory',
+                            path     => "/vulnerabilities/$vuln_idx/scores/$score_idx/cvss_v2/$metric",
+                            code     => '6.1.10',
+                            message  => 'Inconsistent CVSS'
+                        );
+                    }
+                }
+
             }
 
             # CVSS 3.x
 
-            if (my $cvss = $score->cvss_v3) {
+            if (my $cvss_v3 = $score->cvss_v3) {
 
-                my $vector_string = $cvss->vectorString;
+                my $vector_string = $cvss_v3->vectorString;
+                my $cvss          = CVSS->from_vector_string($vector_string);
 
                 return unless $vector_string;
 
-                my $decoded_vector_string = decode_cvss_vector_string($vector_string);
+                my @metrics = (qw[
+                    availabilityImpact
+                    attackComplexity
+                    attackVector
+                    confidentialityImpact
+                    exploitCodeMaturity
+                    integrityImpact
+                    privilegesRequired
+                    reportConfidence
+                    remediationLevel
+                    scope
+                    userInteraction
+                    modifiedAvailabilityImpact
+                    modifiedAttackComplexity
+                    modifiedAttackVector
+                    modifiedConfidentialityImpact
+                    modifiedIntegrityImpact
+                    modifiedPrivilegesRequired
+                    modifiedScope
+                    modifiedUserInteraction
+                ]);
 
-                foreach my $decoded_metric (keys %{$decoded_vector_string}) {
+                foreach my $metric (@metrics) {
 
-                    my $decoded_value = $decoded_vector_string->{$decoded_metric};
-                    my $doc_value     = $cvss->$decoded_metric();
+                    my $doc_metric_value = $cvss_v3->$metric;
 
-                    if ($doc_value && $doc_value ne $decoded_value) {
+                    if ($doc_metric_value && $doc_metric_value ne $cvss->$metric) {
                         $self->add_message(
                             category => 'mandatory',
-                            path     => "/vulnerabilities/$vuln_idx/scores/$score_idx/cvss_v3/$decoded_metric",
+                            path     => "/vulnerabilities/$vuln_idx/scores/$score_idx/cvss_v3/$metric",
                             code     => '6.1.10',
                             message  => 'Inconsistent CVSS'
                         );

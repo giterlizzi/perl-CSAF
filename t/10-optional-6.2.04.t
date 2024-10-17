@@ -11,9 +11,9 @@ use lib "$RealBin/lib";
 use CSAF;
 use Test::CSAF qw(exec_validator_optional_test);
 
-# 6.1.18 Released Revision History
+# 6.2.4 Build Metadata in Revision History
 
-# It MUST be tested that no item of the revision history has a number of 0 or 0.y.z when the document status is final or interim.
+# For each item in revision history it MUST be tested that number does not include build metadata.
 
 # The relevant path for this test is:
 
@@ -21,23 +21,13 @@ use Test::CSAF qw(exec_validator_optional_test);
 
 # Fail test:
 
-#     "tracking": {
-#       // ...
-#       "revision_history": [
-#         {
-#           "date": "2021-05-17T10:00:00.000Z",
-#           "number": "0",
-#           "summary": "First draft"
-#         },
-#         {
-#           "date": "2021-07-21T10:00:00.000Z",
-#           "number": "1",
-#           "summary": "Initial version."
-#         }
-#       ],
-#       "status": "final",
-#       "version": "1"
-#     }
+#    "revision_history": [
+#      {
+#        "date": "2021-04-23T10:00:00.000Z",
+#        "number": "1.0.0+exp.sha.ac00785",
+#        "summary": "Initial version."
+#      }
+#    ]
 
 my $csaf = CSAF->new;
 
