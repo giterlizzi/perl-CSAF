@@ -102,14 +102,16 @@ sub _mirror_via_rolie_feed {
     my $ua  = $self->ua;
     my $log = $self->log;
 
-    my $res = $ua->get($url);
+    my $rolie_file     = catfile($self->options->directory, URI::URL->new($url)->path);
+    my $rolie_base_dir = dirname($rolie_file);
 
-    if (!$res->is_success) {
-        $log->error($res->status_line);
-        Carp::croak $res->message;
-    }
+    make_path($rolie_base_dir) unless -e $rolie_base_dir;
 
-    my $rolie = eval { Cpanel::JSON::XS->new->decode($res->content) };
+    $log->debug("Download ROLIE: $url => $rolie_file");
+
+    $ua->mirror($url, $rolie_file);
+
+    my $rolie = eval { Cpanel::JSON::XS->new->decode(file_read($rolie_file)) };
 
     my $after_date  = $self->options->after_date;
     my $before_date = $self->options->before_date;
@@ -196,21 +198,8 @@ sub _mirror_via_provider_metadata {
             $log->debug("Use ROLIE feeds");
 
             foreach my $feed (@{$distribution->{rolie}->{feeds}}) {
-
                 my $rolie_url = $feed->{url};
-
-                $log->debug("ROLIE URL $rolie_url");
-
-                my $rolie_file     = catfile($self->options->directory, URI::URL->new($rolie_url)->path);
-                my $rolie_base_dir = dirname($rolie_file);
-
-                make_path($rolie_base_dir) unless -e $rolie_base_dir;
-
-                $log->debug("Download: $rolie_url => $rolie_file");
-
-                $ua->mirror($rolie_url, $rolie_file);
                 $self->_mirror_via_rolie_feed($rolie_url);
-
             }
         }
 
