@@ -44,9 +44,10 @@ $csaf->writer(directory => '/var/www/html/csaf')->write;
 
 ## Command-Line Utility
 
-- `csaf-downloader`, Download CSAF document
+- `csaf-downloader`, Download CSAF documents
 - `csaf-rolie`, Create ROLIE feed
 - `csaf-validator`, Validate a CSAF document
+- `csaf2html`, Convert CSAF documents in HTML
 
 ## Install
 

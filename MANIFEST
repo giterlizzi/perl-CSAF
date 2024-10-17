@@ -1,9 +1,11 @@
 bin/csaf-downloader
 bin/csaf-rolie
 bin/csaf-validator
+bin/csaf2html
 Changes
 INSTALL.md
 lib/App/CSAF/Downloader.pm
+lib/App/CSAF/Renderer.pm
 lib/App/CSAF/ROLIE.pm
 lib/App/CSAF/Validator.pm
 lib/CSAF.pm
@@ -28,7 +30,7 @@ lib/CSAF/resources/cache/9653b500aa11f9eec08e6722af41cac7
 lib/CSAF/resources/cache/ac1b12ae2d190a0c468b534b8a1b9bd2
 lib/CSAF/resources/cache/bb7795e241f5997c83fb4fc8fa278368
 lib/CSAF/resources/cache/efea8b3a7512905f5aa6affa56ea3a68
-lib/CSAF/resources/template/default.tt
+lib/CSAF/resources/template/default.tt2
 lib/CSAF/ROLIE/Entries.pm
 lib/CSAF/ROLIE/Entry.pm
 lib/CSAF/ROLIE/Feed.pm

@@ -104,6 +104,10 @@ L<CSAF::Options::Downloader> inherits all methods from L<CSAF::Util::Options>.
 
 =item validate
 
+=item after_date
+
+=item before_date
+
 =back
 
 
