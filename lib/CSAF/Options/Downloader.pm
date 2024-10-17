@@ -5,6 +5,8 @@ use strict;
 use warnings;
 use utf8;
 
+use CSAF::Util qw(parse_datetime);
+
 use Moo;
 with 'CSAF::Util::Options';
 
@@ -34,6 +36,18 @@ has timeout_after_download =>
 
 has url      => (is => 'rw');
 has insecure => (is => 'rw', default => FALSE);
+
+has after_date => (
+    is     => 'rw',
+    coerce => \&parse_datetime,
+    isa    => sub { Carp::croak 'MUST BE an instance of "Time::Piece"' unless ref($_[0]) eq 'Time::Piece' }
+);
+
+has before_date => (
+    is     => 'rw',
+    coerce => \&parse_datetime,
+    isa    => sub { Carp::croak 'MUST BE an instance of "Time::Piece"' unless ref($_[0]) eq 'Time::Piece' }
+);
 
 1;
 

@@ -25,6 +25,7 @@ csaf-downloader - CSAF Downloader
 
     Options:
       -u, --url=URL                "provider-metadata.json", "index.txt" or ROLIE feed URL
+      -d, --directory=PATH          Output directory
       -k, --insecure                Skip TLS verification
           --parallel-downloads=NUM  Number of parallel downloads (default: 10)
 
@@ -34,6 +35,9 @@ csaf-downloader - CSAF Downloader
 
           --include=REGEXP          Include file
           --exclude=REGEXP          Exclude file
+
+          --after=Validate          Download CSAF documents more recent than a specific date
+          --before=DATE             Download CSAF documents older than a specific date
 
       -v, --verbose                 Verbose
 
@@ -60,6 +64,10 @@ Download using C<provider-metadata.json> with ROLIE feed document:
 Download using ROLIE feed document:
 
     $ csaf-downloader -u https://psirt.domain.tld/advisories/csaf/feed-tlp-white.json
+
+Download CSAF documents more recent than a specific date:
+
+    $ csaf-downloader -u https://psirt.domain.tld/advisories/csaf/feed-tlp-white.json --after 2024-10-01
 
 =head1 SEE ALSO
 

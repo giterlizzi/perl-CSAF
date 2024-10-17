@@ -111,16 +111,22 @@ sub _mirror_via_rolie_feed {
 
     my $rolie = eval { Cpanel::JSON::XS->new->decode($res->content) };
 
+    my $after_date  = $self->options->after_date;
+    my $before_date = $self->options->before_date;
+
     my $idx = 0;
     my $pm  = Parallel::ForkManager->new($self->options->parallel_downloads);
 
 ENTRY:
     foreach my $entry (@{$rolie->{feed}->{entry}}) {
 
-        my $options  = {signature => 0, integrity => {sha256 => 0, sha512 => 0}};
-        my $csaf_url = undef;
+        my $options     = {signature => 0, integrity => {sha256 => 0, sha512 => 0}};
+        my $csaf_url    = undef;
+        my $last_update = undef;
 
         foreach my $link (@{$entry->{link}}) {
+
+            next unless defined $link->{rel};
 
             $options->{signature} = 1 if ($link->{rel} eq 'signature');
 
@@ -128,6 +134,23 @@ ENTRY:
             $options->{integrity}->{sha512} = 1 if ($link->{rel} eq 'hash' & $link->{href} =~ /sha512/);
 
             $csaf_url = $link->{href} if ($link->{rel} eq 'self');
+
+        }
+
+        if (defined $entry->{updated}) {
+
+            $last_update = Time::Piece->strptime(substr($entry->{updated}, 0, 19), '%Y-%m-%dT%H:%M:%S');
+
+            my $skip = undef;
+
+            $skip = 1 if ($before_date && $before_date < $last_update);
+            $skip = 1 if ($after_date  && $after_date > $last_update);
+
+            if ($skip) {
+                $log->debug(sprintf("[#$idx] Skip Download CSAF document: $csaf_url (last updated: %s)",
+                    $last_update->datetime));
+                next;
+            }
 
         }
 
@@ -166,6 +189,29 @@ sub _mirror_via_provider_metadata {
 
         if (defined $distribution->{directory_url}) {
             $self->_mirror_via_index_txt($distribution->{directory_url});
+        }
+
+        if (defined $distribution->{rolie} && defined $distribution->{rolie}->{feeds}) {
+
+            $log->debug("Use ROLIE feeds");
+
+            foreach my $feed (@{$distribution->{rolie}->{feeds}}) {
+
+                my $rolie_url = $feed->{url};
+
+                $log->debug("ROLIE URL $rolie_url");
+
+                my $rolie_file     = catfile($self->options->directory, URI::URL->new($rolie_url)->path);
+                my $rolie_base_dir = dirname($rolie_file);
+
+                make_path($rolie_base_dir) unless -e $rolie_base_dir;
+
+                $log->debug("Download: $rolie_url => $rolie_file");
+
+                $ua->mirror($rolie_url, $rolie_file);
+                $self->_mirror_via_rolie_feed($rolie_url);
+
+            }
         }
 
     }
