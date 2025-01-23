@@ -109,15 +109,15 @@ sub add_entry {
 
         my $integrity = $options->{integrity};
 
-        push @{$link}, {href => "$csaf_url.sha256", ref => 'hash'}
+        push @{$link}, {href => "$csaf_url.sha256", rel => 'hash'}
             if (defined $integrity->{sha256} && $integrity->{sha256});
 
-        push @{$link}, {href => "$csaf_url.sha512", ref => 'hash'}
+        push @{$link}, {href => "$csaf_url.sha512", rel => 'hash'}
             if (defined $integrity->{sha512} && $integrity->{sha512});
 
     }
 
-    push @{$link}, {href => "$csaf_url.asc", ref => 'signature'}
+    push @{$link}, {href => "$csaf_url.asc", rel => 'signature'}
         if (defined $options->{signature} && $options->{signature});
 
     my $is_updated = 0;
