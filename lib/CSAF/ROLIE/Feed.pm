@@ -198,7 +198,7 @@ sub render {
     $self->init;
 
     my $json = Cpanel::JSON::XS->new->utf8->canonical->allow_nonref->allow_unknown->allow_blessed->convert_blessed
-        ->stringify_infnan->escape_slash(0)->allow_dupkeys->pretty;
+        ->stringify_infnan->escape_slash(0)->allow_dupkeys->pretty->space_before(0);
 
     my @sorted_entries = sort { $b->updated->epoch <=> $a->updated->epoch } @{$self->entry->to_array};
     $self->entry->items(\@sorted_entries);
